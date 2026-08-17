@@ -1,0 +1,19 @@
+# Runtime uploads
+uploads/*
+!uploads/.htaccess
+
+# Local configuration and environment files
+.env
+.env.*
+!.env.example
+
+# Editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.cache
