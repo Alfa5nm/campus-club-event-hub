@@ -42,3 +42,12 @@ INSERT INTO notification (recipient_user_id,notification_type,message,is_read) V
 (2,'Registration Confirmation','Your registration for Build Night is confirmed.',0),
 (1,'Announcement Update','The Debate Society published a new event.',1),
 (2,'Membership Update','Your Green Campus Collective request is awaiting review.',0);
+
+UPDATE clubs SET logo='assets/images/club-collaboration.jpg' WHERE club_id=1;
+UPDATE clubs SET logo='assets/images/campus-study.jpg' WHERE club_id=2;
+UPDATE clubs SET logo='assets/images/campus-walk.jpg' WHERE club_id=3;
+UPDATE events SET poster='assets/images/club-collaboration.jpg' WHERE event_id=1;
+UPDATE events SET poster='assets/images/campus-study.jpg' WHERE event_id=2;
+UPDATE events SET poster='assets/images/campus-walk.jpg' WHERE event_id=3;
+UPDATE club_gallery SET photo_path='assets/images/club-collaboration.jpg' WHERE club_id=1;
+UPDATE club_gallery SET photo_path='assets/images/campus-study.jpg' WHERE club_id=2;

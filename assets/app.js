@@ -9,6 +9,7 @@ if (toggle && nav) {
 
 document.querySelectorAll('[data-confirm]').forEach((button) => {
   button.addEventListener('click', (event) => {
+    if (button.closest('form[data-ajax]')) return;
     if (!window.confirm(button.dataset.confirm)) event.preventDefault();
   });
 });
@@ -71,4 +72,81 @@ document.querySelectorAll('.reveal').forEach((element) => revealObserver.observe
 
 document.querySelectorAll('.flash').forEach((message) => {
   setTimeout(() => message.classList.add('flash-out'), 3600);
+});
+
+const toast = (message, ok = true) => {
+  document.querySelector('.inline-toast')?.remove();
+  const element = document.createElement('div');
+  element.className = 'inline-toast';
+  element.textContent = `${ok ? '✓' : '×'} ${message}`;
+  document.body.appendChild(element);
+  setTimeout(() => element.remove(), 3500);
+};
+
+document.querySelectorAll('form[data-ajax]').forEach((form) => {
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const submitter = event.submitter;
+    if (submitter?.dataset.confirm && !window.confirm(submitter.dataset.confirm)) return;
+    const data = new FormData(form);
+    if (submitter?.name) data.set(submitter.name, submitter.value);
+    const original = submitter?.textContent;
+    if (submitter) { submitter.disabled = true; submitter.textContent = 'Working…'; }
+    try {
+      const response = await fetch(form.dataset.ajax, { method: 'POST', body: data, headers: { 'X-Requested-With': 'fetch' } });
+      const result = await response.json();
+      if (!result.ok) throw new Error(result.message);
+      toast(result.message);
+
+      if (form.dataset.ajax.includes('event-registration')) {
+        const card = form.closest('.event-card');
+        const count = card.querySelector('[data-registration-count]');
+        if (count) count.textContent = result.data.registration_count;
+        const action = form.querySelector('[name="action"]');
+        if (action) action.value = result.data.state === 'registered' ? 'cancel_registration' : 'register';
+        submitter.name = 'action';
+        submitter.value = action?.value || '';
+        submitter.className = result.data.state === 'registered' ? 'button button-quiet' : 'button button-primary';
+        submitter.textContent = result.data.state === 'registered' ? 'Registered ✓ · Cancel' : 'Claim my place';
+        if (result.data.state === 'registered') submitter.dataset.confirm = 'Cancel your registration?';
+        else delete submitter.dataset.confirm;
+      } else if (form.querySelector('[name="action"]')?.value === 'request_join') {
+        submitter.textContent = 'Request pending'; submitter.disabled = true;
+        const state = form.closest('.club-card')?.querySelector('[data-membership-state]');
+        if (state) state.textContent = 'Pending';
+      } else {
+        const row = form.closest('[data-membership-row]');
+        const action = submitter?.value || form.querySelector('[name="action"]')?.value;
+        const state = row?.querySelector('[data-approval-state]');
+        if (state && action === 'approve') { state.textContent = 'Approved'; state.classList.remove('badge-warn'); }
+        if (state && action === 'reject') { state.textContent = 'Rejected'; state.classList.remove('badge-warn'); }
+        if (action === 'remove') { row?.classList.add('flash-out'); setTimeout(() => row?.remove(), 300); }
+        if (submitter) submitter.textContent = original;
+      }
+    } catch (error) {
+      toast(error.message || 'That action could not be completed.', false);
+      if (submitter) submitter.textContent = original;
+    } finally {
+      if (submitter && submitter.textContent !== 'Request pending') submitter.disabled = false;
+    }
+  });
+});
+
+const eventGrid = document.querySelector('[data-event-view]');
+const viewButtons = [...document.querySelectorAll('[data-view]')];
+if (eventGrid && viewButtons.length) {
+  const setView = (view) => {
+    eventGrid.classList.toggle('event-view-list', view === 'list');
+    viewButtons.forEach((button) => button.classList.toggle('active', button.dataset.view === view));
+    localStorage.setItem('campushub-event-view', view);
+  };
+  setView(localStorage.getItem('campushub-event-view') || 'grid');
+  viewButtons.forEach((button) => button.addEventListener('click', () => setView(button.dataset.view)));
+}
+
+document.querySelectorAll('img').forEach((image) => {
+  image.addEventListener('error', () => {
+    image.hidden = true;
+    image.parentElement?.classList.add('image-fallback');
+  });
 });

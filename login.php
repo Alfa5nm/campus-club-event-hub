@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 $pageTitle = 'Sign in'; require __DIR__ . '/includes/header.php';
 ?>
-<section class="form-shell">
+<section class="auth-page"><div class="auth-visual"><img src="assets/images/campus-study.jpg" alt="Students collaborating on campus"><div class="auth-caption"><span>MEMBER ACCESS / 2026</span><h1>Your campus<br>is waiting.</h1></div></div><div class="form-shell">
     <span class="eyebrow">Welcome back</span><h2>Sign in to CampusHub</h2>
     <p class="muted">Manage your campus life from one place.</p>
     <?php if ($error): ?><div class="form-error"><?= e($error) ?></div><?php endif; ?>
@@ -34,5 +34,5 @@ $pageTitle = 'Sign in'; require __DIR__ . '/includes/header.php';
         <button class="button button-primary" type="submit">Sign in</button>
     </form>
     <p class="auth-note">New here? <a href="signup.php"><strong>Create an account</strong></a></p>
-</section>
+</div></section>
 <?php require __DIR__ . '/includes/footer.php'; ?>

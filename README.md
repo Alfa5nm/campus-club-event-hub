@@ -35,7 +35,10 @@ The default connection is MySQL user `root` with an empty password. Change `conf
 ## Implemented scope
 
 - Secure signup, login, logout, session regeneration, password hashing, CSRF protection
-- Club browsing and administrator/executive profile management
-- Membership requests, approvals, removals, and executive-role assignment
-- Event browsing and authorized event creation, editing, cancellation, and deletion
+- Editorial, photography-led responsive interface with role-aware dashboards
+- Club browsing, live filtering, and administrator/executive profile management
+- Progressive membership requests, approvals, removals, and executive-role assignment with non-JavaScript fallbacks
+- Event calendar/grid views, live filtering, inline registration, and authorized event management
 - Normalized schema with mock data for later registration, attendance, certificate, feedback, announcement, notification, recommendation, and reporting work
+
+Placeholder photography is stored locally under `assets/images`. Source and photographer details are documented in `docs/image-credits.md`.

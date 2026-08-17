@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 $pageTitle = 'Create account'; require __DIR__ . '/includes/header.php';
 ?>
-<section class="form-shell wide">
+<section class="auth-page"><div class="auth-visual"><img src="assets/images/campus-walk.jpg" alt="Students walking through campus"><div class="auth-caption"><span>JOIN THE DIRECTORY</span><h1>Start with<br>hello.</h1></div></div><div class="form-shell wide">
     <span class="eyebrow">Start exploring</span><h2>Create your student account</h2>
     <p class="muted">Use your campus details. Interests can be updated later.</p>
     <?php if ($error): ?><div class="form-error"><?= e($error) ?></div><?php endif; ?>
@@ -48,5 +48,5 @@ $pageTitle = 'Create account'; require __DIR__ . '/includes/header.php';
         <button class="button button-primary" type="submit">Create account</button>
     </form>
     <p class="auth-note">Already registered? <a href="login.php"><strong>Sign in</strong></a></p>
-</section>
+</div></section>
 <?php require __DIR__ . '/includes/footer.php'; ?>
