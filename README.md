@@ -35,6 +35,7 @@ The default connection is MySQL user `root` with an empty password. Change `conf
 ## Implemented scope
 
 - Secure signup, login, logout, session regeneration, password hashing, CSRF protection
+- Student signup restricted to verified-format `@g.bracu.ac.bd` email addresses
 - Editorial, photography-led responsive interface with role-aware dashboards
 - Club browsing, live filtering, and administrator/executive profile management
 - Progressive membership requests, approvals, removals, and executive-role assignment with non-JavaScript fallbacks

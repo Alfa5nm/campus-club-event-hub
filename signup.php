@@ -7,8 +7,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['full_name'] ?? ''); $email = strtolower(trim($_POST['email'] ?? ''));
     $studentId = trim($_POST['student_id'] ?? ''); $department = trim($_POST['department'] ?? '');
     $year = trim($_POST['academic_year'] ?? ''); $password = $_POST['password'] ?? '';
-    if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $studentId === '' || $department === '') {
-        $error = 'Please complete all required fields with valid information.';
+    $emailDomainValid = filter_var($email, FILTER_VALIDATE_EMAIL) && str_ends_with($email, '@g.bracu.ac.bd');
+    if ($name === '' || !$emailDomainValid || $studentId === '' || $department === '') {
+        $error = !$emailDomainValid
+            ? 'Registration requires a valid @g.bracu.ac.bd email address.'
+            : 'Please complete all required fields with valid information.';
     } elseif (strlen($password) < 8) {
         $error = 'Password must contain at least 8 characters.';
     } else {
@@ -38,7 +41,7 @@ $pageTitle = 'Create account'; require __DIR__ . '/includes/header.php';
     <form method="post"><input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
         <div class="field-grid">
             <div class="field"><label for="full_name">Full name</label><input id="full_name" name="full_name" required value="<?= e($_POST['full_name'] ?? '') ?>"></div>
-            <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" required value="<?= e($_POST['email'] ?? '') ?>"></div>
+            <div class="field"><label for="email">BRAC University email</label><input id="email" name="email" type="email" inputmode="email" pattern="[A-Za-z0-9._%+\-]+@g\.bracu\.ac\.bd" placeholder="name@g.bracu.ac.bd" title="Use your @g.bracu.ac.bd email address" required value="<?= e($_POST['email'] ?? '') ?>"><small class="muted">Only @g.bracu.ac.bd accounts can register.</small></div>
             <div class="field"><label for="student_id">Student ID</label><input id="student_id" name="student_id" required value="<?= e($_POST['student_id'] ?? '') ?>"></div>
             <div class="field"><label for="department">Department</label><input id="department" name="department" required value="<?= e($_POST['department'] ?? '') ?>"></div>
             <div class="field"><label for="academic_year">Academic year</label><input id="academic_year" name="academic_year" placeholder="e.g. 2025–26" value="<?= e($_POST['academic_year'] ?? '') ?>"></div>
