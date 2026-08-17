@@ -21,8 +21,8 @@ If a database already exists, the installer asks before replacing it and creates
 
 1. Start Apache and MySQL from the XAMPP Control Panel.
 2. Open phpMyAdmin and import `database/schema.sql`, followed by `database/seed.sql`.
-3. Copy or link this folder into `C:\xampp\htdocs\campus-club-event-hub`.
-4. Visit `http://localhost/campus-club-event-hub/`.
+3. Copy or link this folder into your active XAMPP installation as `htdocs\campus-club-hub`.
+4. Visit `http://localhost/campus-club-hub/`.
 
 The default connection is MySQL user `root` with an empty password. Change `config/database.php` if your XAMPP configuration differs.
 

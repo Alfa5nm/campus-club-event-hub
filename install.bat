@@ -3,7 +3,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 title Campus Club Hub - XAMPP Installer
 color 0A
 
-set "APP_NAME=campus-club-event-hub"
+set "APP_NAME=campus-club-hub"
 set "DB_NAME=campus_club_hub"
 set "SOURCE_DIR=%~dp0"
 set "XAMPP_DIR="
@@ -69,11 +69,20 @@ pause
 exit /b 0
 
 :find_xampp
+rem Prefer the XAMPP installation currently serving Apache. This matters on
+rem computers that have more than one XAMPP copy installed.
+for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "$p=Get-CimInstance Win32_Process -Filter 'Name = ''httpd.exe''' -ErrorAction SilentlyContinue ^| Select-Object -First 1 -ExpandProperty ExecutablePath; if($p){Split-Path (Split-Path $p -Parent) -Parent}" 2^>nul`) do (
+    if not defined XAMPP_DIR if exist "%%I\xampp-control.exe" set "XAMPP_DIR=%%I"
+)
+if defined XAMPP_DIR exit /b 0
+
 if defined XAMPP_HOME if exist "%XAMPP_HOME%\xampp-control.exe" set "XAMPP_DIR=%XAMPP_HOME%"
 if defined XAMPP_DIR exit /b 0
 
 for %%D in (C D E F) do (
     if not defined XAMPP_DIR if exist "%%D:\xampp\xampp-control.exe" set "XAMPP_DIR=%%D:\xampp"
+    if not defined XAMPP_DIR if exist "%%D:\softwares\xampp\xampp-control.exe" set "XAMPP_DIR=%%D:\softwares\xampp"
+    if not defined XAMPP_DIR if exist "%%D:\software\xampp\xampp-control.exe" set "XAMPP_DIR=%%D:\software\xampp"
 )
 if defined XAMPP_DIR exit /b 0
 
