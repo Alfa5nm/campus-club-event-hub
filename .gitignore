@@ -18,3 +18,4 @@ Thumbs.db
 *.tmp
 *.cache
 .docx-qa-v*/
+~$*.docx
