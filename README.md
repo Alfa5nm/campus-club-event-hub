@@ -43,3 +43,7 @@ The default connection is MySQL user `root` with an empty password. Change `conf
 - Normalized schema with mock data for later registration, attendance, certificate, feedback, announcement, notification, recommendation, and reporting work
 
 Placeholder photography is stored locally under `assets/images`. Source and photographer details are documented in `docs/image-credits.md`.
+
+## Team documentation
+
+The detailed ownership, architecture, demonstration, and viva guide for Faisal Mahbub, Rifat Mahmud, and Tarannum Diha is available in `docs/TEAM_FEATURE_DOCUMENTATION.md`.
