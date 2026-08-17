@@ -4,10 +4,25 @@ XAMPP-ready PHP and MySQL application for campus club, membership, executive-rol
 
 ## Setup
 
+### Automatic Windows setup
+
+Double-click `install.bat`. It will:
+
+1. Find XAMPP on common Windows drives.
+2. Confirm that PHP, MySQL/MariaDB, Apache, and phpMyAdmin are available.
+3. Copy the project into XAMPP's `htdocs` directory.
+4. Start Apache and MySQL.
+5. Create and seed the database.
+6. Open the application and phpMyAdmin.
+
+If a database already exists, the installer asks before replacing it and creates a timestamped SQL backup first. Existing runtime uploads are preserved during application updates.
+
+### Manual setup
+
 1. Start Apache and MySQL from the XAMPP Control Panel.
 2. Open phpMyAdmin and import `database/schema.sql`, followed by `database/seed.sql`.
-3. Copy or link this folder into `C:\xampp\htdocs\campus-club-hub`.
-4. Visit `http://localhost/campus-club-hub/`.
+3. Copy or link this folder into `C:\xampp\htdocs\campus-club-event-hub`.
+4. Visit `http://localhost/campus-club-event-hub/`.
 
 The default connection is MySQL user `root` with an empty password. Change `config/database.php` if your XAMPP configuration differs.
 
