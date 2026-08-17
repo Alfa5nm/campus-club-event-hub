@@ -47,3 +47,5 @@ Placeholder photography is stored locally under `assets/images`. Source and phot
 ## Team documentation
 
 The detailed ownership, architecture, demonstration, and viva guide for Faisal Mahbub, Rifat Mahmud, and Tarannum Diha is available in `docs/TEAM_FEATURE_DOCUMENTATION.md`.
+
+A polished, illustrated Microsoft Word edition is available in `docs/CampusHub_Team_Feature_Documentation.docx`. Editable SVG sources for its architecture, schema, security-flow, and team-integration figures are stored under `docs/diagrams`.

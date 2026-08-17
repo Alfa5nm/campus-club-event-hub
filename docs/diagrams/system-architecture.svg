@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="620" viewBox="0 0 1400 620" role="img" aria-labelledby="title desc">
+<title id="title">CampusHub system architecture</title><desc id="desc">Browser, Apache PHP, application services and MySQL layers with request and response flow.</desc>
+<defs><style>.t{font:700 28px Arial;fill:#17212b}.s{font:400 19px Arial;fill:#46515a}.k{font:700 16px Arial;letter-spacing:2px;fill:#bd4f3c}.box{stroke:#17212b;stroke-width:3;rx:18}.arrow{stroke:#17212b;stroke-width:4;fill:none;marker-end:url(#a)}</style><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#17212b"/></marker></defs>
+<rect width="1400" height="620" fill="#f8f1e5"/>
+<text x="70" y="72" class="k">CAMPUSHUB / REQUEST ARCHITECTURE</text>
+<rect x="70" y="135" width="270" height="330" fill="#f4b83f" class="box"/><text x="105" y="205" class="t">Browser</text><text x="105" y="248" class="s">HTML + CSS</text><text x="105" y="282" class="s">Vanilla JavaScript</text><text x="105" y="336" class="s">Forms / AJAX</text><text x="105" y="370" class="s">Search + filters</text><text x="105" y="404" class="s">Responsive views</text>
+<rect x="430" y="135" width="350" height="330" fill="#ee725d" class="box"/><text x="465" y="205" class="t">Apache + PHP 8</text><text x="465" y="248" class="s">Sessions + CSRF</text><text x="465" y="282" class="s">Validation</text><text x="465" y="316" class="s">Role authorization</text><text x="465" y="350" class="s">Business rules</text><text x="465" y="384" class="s">HTML / JSON response</text>
+<rect x="870" y="135" width="460" height="330" fill="#dce8dc" class="box"/><text x="905" y="205" class="t">MySQL / MariaDB</text><text x="905" y="248" class="s">Normalized relational schema</text><text x="905" y="282" class="s">Foreign keys + constraints</text><text x="905" y="316" class="s">Prepared queries</text><text x="905" y="350" class="s">Transactions + row locks</text><text x="905" y="384" class="s">Persistent project state</text>
+<path d="M340 260 H420" class="arrow"/><path d="M780 260 H860" class="arrow"/><path d="M870 390 H790" class="arrow"/><path d="M430 390 H350" class="arrow"/>
+<text x="350" y="242" class="s">request</text><text x="795" y="242" class="s">SQL</text><text x="790" y="425" class="s">rows</text><text x="345" y="425" class="s">response</text>
+<text x="70" y="545" class="s">Progressive enhancement: standard form submissions remain usable when JavaScript is unavailable.</text>
+</svg>
