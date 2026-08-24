@@ -54,8 +54,8 @@ echo.
 echo   Application: http://localhost/%APP_NAME%/
 echo   phpMyAdmin:  http://localhost/phpmyadmin/
 echo.
-echo   Demo executive: amina@student.edu / Password123!
-echo   Demo student:   nafis@student.edu / Password123!
+echo   Demo executive: amina.rahman@g.bracu.ac.bd / Password123!
+echo   Demo student:   nafis.karim@g.bracu.ac.bd / Password123!
 echo   Demo admin:     admin@campus.edu / Admin123!
 echo.
 choice /C YN /N /M "Open the application and phpMyAdmin now? [Y/N]: "
@@ -190,7 +190,13 @@ if not errorlevel 1 (
     choice /C RSK /N /M "Reset with seed data [R], skip database import [S], or cancel [K]? "
     if errorlevel 3 exit /b 1
     if errorlevel 2 (
-        echo [OK] Existing database preserved.
+        echo Applying non-destructive project migrations...
+        "%MYSQL%" -u root -e "source %DEST_DIR:\=/%/database/migrate_2026_core_expansion.sql"
+        if errorlevel 1 (
+            echo [ERROR] Existing database migration failed.
+            exit /b 1
+        )
+        echo [OK] Existing data preserved and upgraded.
         exit /b 0
     )
     if not exist "%DEST_DIR%\backups" mkdir "%DEST_DIR%\backups"

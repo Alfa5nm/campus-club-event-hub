@@ -280,7 +280,6 @@ Cancellation preserves history and lets registrations or notifications reference
 - Club logo upload processing
 - Full gallery upload CRUD
 - Rich registration-list export
-- Attendance-management screen for club executives
 
 ---
 
@@ -290,7 +289,7 @@ Cancellation preserves history and lets registrations or notifications reference
 
 **“My feature area safely connects students to events. It validates event status, deadlines and capacity, creates a unique QR token, supports cancellation and re-registration, and feeds each confirmed event into the student dashboard.”**
 
-The working independent feature is event registration and cancellation. Attendance and certificates are normalized and ready for the next implementation phase.
+The working independent feature now covers the complete participation chain: registration, QR pass rendering, executive check-in, attendance synchronization, certificate generation, protected download, revocation, and public verification.
 
 ## 5.2 Implemented now
 
@@ -309,6 +308,13 @@ The working independent feature is event registration and cancellation. Attendan
 - Transactional registration and row locking
 - Student dashboard list of confirmed upcoming events
 - Progressive AJAX registration/cancellation with normal form fallback
+- Locally rendered QR passes for every active registration
+- Camera scanning plus email, student-number, and token lookup
+- Club-scoped QR/manual Present and Absent actions
+- Transactional attendance and registration-status synchronization
+- Automatic certificate PDF generation for Present attendance
+- Certificate revocation when attendance changes to Absent
+- Protected student/executive PDF download and public code verification
 
 ## 5.3 Tables owned or heavily used
 
@@ -322,7 +328,7 @@ This is the central associative entity between `students` and `events`.
 | `student_user_id` | Registered student |
 | `event_id` | Selected event |
 | `registration_status` | Registered, Cancelled, Attended, or Absent |
-| `qr_token` | Unique token used by later attendance workflow |
+| `qr_token` | Unique payload rendered and scanned by the attendance workflow |
 | `cancellation_reason` | Audit detail for cancellation |
 | `updated_at` | Last state-change timestamp |
 
@@ -373,6 +379,9 @@ Cancellation updates the existing row rather than deleting it. This preserves re
 6. Return and cancel the registration; show the count decrement.
 7. Explain the saved Cancelled row and cancellation reason.
 8. Explain the deadline/full/cancelled validation cases using the event card fields and code flow.
+9. Open Passes, show the locally rendered QR, and scan or select the registration from Attendance.
+10. Mark Present, download the generated PDF, and verify its public code.
+11. Correct the record to Absent and show that the certificate becomes Revoked.
 
 ## 5.8 Likely viva questions and answers
 
@@ -391,14 +400,12 @@ It preserves audit history, supports a cancellation reason, and allows controlle
 **What happens without JavaScript?**  
 The normal form submits to `events.php`, which executes the same core checks and redirects with a flash message.
 
-## 5.9 Schema-ready / next phase
+## 5.9 Next phase
 
-- Registration detail/history page
-- QR image rendering and scanning interface
-- Manual and QR attendance screens
-- Attendance eligibility enforcement in UI
-- Certificate file generation/download
-- Reminder creation through notifications
+- Registration detail/history export
+- Bulk attendance import
+- Feedback submission after Present attendance
+- Optional email reminders
 
 ---
 
@@ -408,7 +415,7 @@ The normal form submits to `events.php`, which executes the same core checks and
 
 **“My feature area turns relational data into useful role-aware information. The same dashboard recognizes students, club executives, and administrators, then displays the statistics, alerts, queues, and actions appropriate to their authority.”**
 
-The implemented independent feature is the role-aware live dashboard and engagement presentation. Notifications are read and displayed from the database. Advanced feedback CRUD, leaderboard formulas, and full reports remain next-phase modules.
+The implemented independent feature combines the role-aware dashboard with a working notification centre and announcement publishing lifecycle. Advanced feedback CRUD, leaderboard formulas, and full reports remain next-phase modules.
 
 ## 6.2 Implemented now
 
@@ -425,6 +432,10 @@ The implemented independent feature is the role-aware live dashboard and engagem
 - Homepage database statistics, upcoming stories, activity, and calls to action
 - Animated statistics, reveal motion, toast feedback, and reduced interface friction
 - Seeded announcements and notifications for demonstration
+- Club and system announcement create/edit/activate/expire/remove lifecycle
+- One-time transaction-protected notification fan-out to eligible recipients
+- Paginated notification inbox, unread badge, individual read, and read-all actions
+- Automatic certificate, attendance, and announcement notifications
 
 ## 6.3 Dashboard role decision
 
@@ -470,12 +481,14 @@ These are derived reports. They are calculated from source tables rather than st
 - A club ID represents a club-specific announcement.
 - Expiry and status determine whether it should remain active.
 
-The current seed data and dashboard demonstrate reading notifications. Full announcement publishing and notification state-management pages are planned.
+The publishing desk supports drafts and first activation, records `notified_at` to prevent duplicate fan-out, and automatically expires dated notices. The inbox supports paginated recipient-only reading, individual mark-as-read, read-all, and a live unread badge.
 
 ## 6.6 Files to know
 
 - `dashboard.php` — all three role-aware dashboard branches
 - `index.php` — public statistics and active campus content
+- `announcements.php` and `api/announcement.php` — publishing lifecycle and one-time fan-out
+- `notifications.php` and `api/notification.php` — recipient inbox and read state
 - `database/seed.sql` — demonstration announcements and notifications
 - `database/schema.sql` — notification, announcement, and feedback models
 - `assets/app.js` — number animation, reveal motion, and toast messages
@@ -490,6 +503,8 @@ Use separate browser sessions or log out between accounts.
 3. Log in as Administrator and show system totals and moderation queue.
 4. Explain that the page is one controller with role-aware data branches, not three duplicated dashboards.
 5. Return to Home and explain that statistics are queried from the live database.
+6. Publish a club notice as an Executive and show its delivery in a member’s inbox.
+7. Mark the notification read and explain how `notified_at` prevents duplicate fan-out after editing.
 
 ## 6.8 Likely viva questions and answers
 
@@ -508,10 +523,8 @@ An announcement is published content for an audience. A notification is a recipi
 **How would the leaderboard work without a table?**  
 An aggregate SQL query groups by club and calculates a score from event count, attendance, and average rating. The ranking is a derived report, not permanent data.
 
-## 6.9 Schema-ready / next phase
+## 6.9 Next phase
 
-- Notification inbox and mark-as-read actions
-- Announcement create/update/expiry management
 - Feedback and rating submission/moderation
 - Rule-based event recommendations from student interests
 - Active-club leaderboard query and view
@@ -535,8 +548,8 @@ No member’s feature is isolated from the database workflow:
 2. That authority allows an executive to create an event.
 3. **Rifat’s registration system** allows eligible students to register for that event.
 4. Registration data appears on the student and executive dashboards.
-5. Future attendance changes the registration to Attended or Absent.
-6. Present attendance enables certificates and feedback.
+5. Executive attendance changes the registration to Attended or Absent in the same transaction.
+6. Present attendance issues a certificate; a later Absent correction revokes it.
 7. **Faisal’s engagement/reporting system** summarizes registrations, notifications, ratings, and club activity.
 
 This is the project’s strongest integration story: authorization creates managed events, events create participation records, and participation records become engagement and reports.
@@ -552,10 +565,10 @@ This is the project’s strongest integration story: authorization creates manag
 | Memberships | Yes | Yes | Request/approve/reject/remove/role | Diha |
 | Events | Yes | Yes | Create/read/update/cancel/delete | Diha |
 | Event registration | Yes | Yes | Register/cancel/reactivate | Rifat |
-| Attendance | Yes | Not yet | Schema-ready | Rifat |
-| Certificates | Yes | Not yet | Schema-ready | Rifat |
-| Notifications | Yes | Dashboard read | Read display | Faisal |
-| Announcements | Yes | Seed/home content | Read display | Faisal |
+| Attendance | Yes | Yes | QR/manual mark and correction | Rifat |
+| Certificates | Yes | Yes | Issue/revoke/download/verify | Rifat |
+| Notifications | Yes | Yes | Paginated read/read-all/fan-out | Faisal |
+| Announcements | Yes | Yes | Draft/activate/edit/expire/remove | Faisal |
 | Feedback | Yes | Not yet | Schema-ready | Faisal |
 | Recommendations | Derived | Limited dashboard context | Next phase | Faisal |
 | Leaderboard/reports | Derived | Dashboard summaries | Partial | Faisal |
@@ -572,18 +585,18 @@ For a clean demonstration, import `database/schema.sql` followed by `database/se
 
 | Persona | Email | Password | Useful demonstration |
 |---|---|---|---|
-| Executive student | `amina@student.edu` | `Password123!` | Computing Club President |
-| Student | `nafis@student.edu` | `Password123!` | Registration and membership request |
+| Executive student | `amina.rahman@g.bracu.ac.bd` | `Password123!` | Computing Club President |
+| Student | `nafis.karim@g.bracu.ac.bd` | `Password123!` | Registration and membership request |
 | Administrator | `admin@campus.edu` | `Admin123!` | Admin dashboard and all-club authority |
 
-The legacy demo addresses remain usable for login. Newly created student accounts must use `@g.bracu.ac.bd`.
+Fresh seed data uses BRACU-format student addresses, and newly created student accounts must use `@g.bracu.ac.bd`. Existing installations preserve their previously seeded login addresses when upgraded without reset.
 
 ### 9.3 Suggested presentation order
 
 1. Shared introduction: problem, roles, technology, and normalized model.
 2. Diha: club membership authority followed by event creation.
-3. Rifat: register for the newly created event, show capacity and dashboard.
-4. Faisal: show role-aware dashboards and explain how the actions became statistics/alerts.
+3. Rifat: register, show the QR pass, check in, download the certificate, and verify its public code.
+4. Faisal: publish a club notice, show the one-time inbox delivery, then demonstrate read state and role-aware dashboards.
 5. Shared conclusion: security, progressive enhancement, future modules.
 
 ### 9.4 Before presenting
@@ -639,15 +652,11 @@ The pages use live database counts, instant search and filters, remembered event
 | `database/schema.sql` | Complete normalized database definition |
 | `database/seed.sql` | Mock users, clubs, memberships, events, and activity |
 | `docs/campus_club_hub_normalized.drawio` | Visual normalized schema |
-| `includes/bootstrap.php` | Shared startup/session/database loading |
-| `includes/functions.php` | Security, role, authorization, and output helpers |
-| `signup.php` / `login.php` | Authentication |
-| `clubs.php` | Club discovery and management |
-| `memberships.php` | Membership and executive-role management |
-| `events.php` | Event discovery, registration fallback, and event CRUD |
-| `dashboard.php` | Student/executive/admin dashboard |
-| `api/membership.php` | Membership JSON actions |
-| `api/event-registration.php` | Transactional registration JSON actions |
+| `dashboard.php` | Student/executive/admin dashboard and module shortcuts |
+| `attendance.php` / `certificates.php` / `verify-certificate.php` | Attendance, passes, downloads, and verification UI |
+| `announcements.php` / `notifications.php` | Publishing and recipient inbox UI |
+| `api/membership.php` / `api/event-registration.php` / `api/attendance.php` | Membership and transactional participation JSON actions |
+| `api/announcement.php` / `api/notification.php` | Fan-out and read-state JSON actions |
 | `api/_json.php` | JSON, authentication, method, and CSRF contract |
 | `assets/app.js` | Dynamic browser behavior |
 | `assets/style.css` | Responsive editorial design system |
@@ -665,13 +674,12 @@ The pages use live database counts, instant search and filters, remembered event
 
 ### Rifat Mahmud
 
-**Showcase:** safe event registration and cancellation.  
-**Best proof:** register inline, watch capacity change, verify Dashboard, then cancel.  
-**Core concept:** transactional enforcement of uniqueness, deadline, and capacity.
+**Showcase:** QR registration, attendance check-in, certificate generation, and public verification.
+**Best proof:** show a QR pass, mark Present, download the PDF, verify its code, then demonstrate revocation.
+**Core concept:** one transactional participation chain from registration to verified certificate.
 
 ### Faisal Mahbub
 
-**Showcase:** one role-aware dashboard driven by relational aggregates.  
-**Best proof:** compare Student, Executive, and Administrator views.  
-**Core concept:** live derived information without duplicating report data.
-
+**Showcase:** announcement publishing, one-time notification fan-out, inbox state, and role-aware dashboards.
+**Best proof:** publish once, inspect recipient delivery/read state, then compare Student, Executive, and Administrator views.
+**Core concept:** audience content becomes recipient-specific engagement without duplicate fan-out.

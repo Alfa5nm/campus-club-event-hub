@@ -15,7 +15,7 @@ Double-click `install.bat`. It will:
 5. Create and seed the database.
 6. Open the application and phpMyAdmin.
 
-If a database already exists, the installer asks before replacing it and creates a timestamped SQL backup first. Existing runtime uploads are preserved during application updates.
+If a database already exists, the installer can preserve it and apply the idempotent core-expansion migration, or create a timestamped SQL backup before resetting it. Existing runtime uploads are preserved during application updates.
 
 ### Manual setup
 
@@ -28,8 +28,8 @@ The default connection is MySQL user `root` with an empty password. Change `conf
 
 ## Demo accounts
 
-- Student/executive: `amina@student.edu` / `Password123!`
-- Student: `nafis@student.edu` / `Password123!`
+- Student/executive: `amina.rahman@g.bracu.ac.bd` / `Password123!`
+- Student: `nafis.karim@g.bracu.ac.bd` / `Password123!`
 - Administrator: `admin@campus.edu` / `Admin123!`
 
 ## Implemented scope
@@ -40,9 +40,16 @@ The default connection is MySQL user `root` with an empty password. Change `conf
 - Club browsing, live filtering, and administrator/executive profile management
 - Progressive membership requests, approvals, removals, and executive-role assignment with non-JavaScript fallbacks
 - Event calendar/grid views, live filtering, inline registration, and authorized event management
-- Normalized schema with mock data for later registration, attendance, certificate, feedback, announcement, notification, recommendation, and reporting work
+- QR event passes plus executive QR/manual attendance with transactional status synchronization
+- Automatic PDF certificate issuance, revocation, protected download, and public verification
+- Club/system announcement publishing with one-time recipient fan-out and automatic expiry
+- Paginated notification centre with unread badges and progressive mark-as-read actions
+- Offline QR generation/scanning dependencies stored locally under `assets/vendor`
+- Normalized schema with mock data for later feedback, recommendation, and reporting work
 
 Placeholder photography is stored locally under `assets/images`. Source and photographer details are documented in `docs/image-credits.md`.
+
+Local QR dependency sources and licenses are documented in `docs/dependency-credits.md`.
 
 ## Team documentation
 

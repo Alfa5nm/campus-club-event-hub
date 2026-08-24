@@ -1,6 +1,8 @@
 <?php
 $pageTitle = $pageTitle ?? 'Campus Club Hub';
 $currentUser = user();
+$managedNavigation = $currentUser ? managed_clubs() : [];
+$unreadCount = $currentUser ? unread_notification_count() : 0;
 ?>
 <!doctype html>
 <html lang="en">
@@ -12,6 +14,7 @@ $currentUser = user();
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/expansion.css">
 </head>
 <body>
 <header class="site-header">
@@ -23,6 +26,9 @@ $currentUser = user();
         <a class="<?= active_page('events.php') ?>" href="events.php">Events</a>
         <?php if ($currentUser): ?>
             <a class="<?= active_page('memberships.php') ?>" href="memberships.php">Memberships</a>
+            <?php if ($managedNavigation): ?><a class="<?= active_page('attendance.php') ?>" href="attendance.php">Attendance</a><a class="<?= active_page('announcements.php') ?>" href="announcements.php">Publish</a><?php endif; ?>
+            <a class="<?= active_page('certificates.php') ?>" href="certificates.php">Passes</a>
+            <a class="nav-notice <?= active_page('notifications.php') ?>" href="notifications.php">Inbox<?php if($unreadCount):?><b data-unread-count><?=$unreadCount?></b><?php endif;?></a>
             <a class="<?= active_page('dashboard.php') ?>" href="dashboard.php">Dashboard</a>
             <a class="profile-link" href="dashboard.php"><span><?= e(strtoupper(substr($currentUser['full_name'],0,1))) ?></span><?= e(explode(' ',$currentUser['full_name'])[0]) ?></a>
             <a class="button button-ink" href="logout.php">Sign out</a>

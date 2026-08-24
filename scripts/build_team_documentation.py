@@ -459,6 +459,8 @@ def build():
         p = doc.add_paragraph()
         if line.startswith("**") and line.endswith("**"):
             p.paragraph_format.space_before = Pt(5)
+        if line.startswith(("**Showcase:**", "**Best proof:**", "**Core concept:**")):
+            p.paragraph_format.space_after = Pt(4)
         add_rich_text(p, line)
         i += 1
 
@@ -470,7 +472,7 @@ def build():
             break
     if target is not None:
         temp = doc.add_paragraph()
-        add_figure(doc, "team-integration.png", "Figure 4. Three feature owners, one integrated workflow", "Tarannum Diha's club authority produces managed events, Rifat Mahmud's registrations produce participation data, and Faisal Mahbub's dashboards convert it into insight.", 6.35)
+        add_figure(doc, "team-integration.png", "Figure 4. Three feature owners, one integrated workflow", "Tarannum Diha's club authority produces managed events, Rifat Mahmud verifies attendance and certificates, and Faisal Mahbub publishes recipient-specific engagement updates.", 6.35)
         # Move the two appended figure paragraphs to immediately after the heading.
         body = doc._element.body
         figure_nodes = list(body)[-3:]

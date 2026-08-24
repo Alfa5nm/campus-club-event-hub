@@ -1,9 +1,9 @@
 USE campus_club_hub;
 
 INSERT INTO users (user_id,full_name,email,password_hash,phone,role,status) VALUES
-(1,'Amina Rahman','amina@student.edu','$2y$10$QdyyYxMIXiDhKa5Z5RQQleDlvTh7rHKt5F17h6pDTKVvpYl97Qqv6','01711000001','Student','Active'),
-(2,'Nafis Karim','nafis@student.edu','$2y$10$QdyyYxMIXiDhKa5Z5RQQleDlvTh7rHKt5F17h6pDTKVvpYl97Qqv6','01711000002','Student','Active'),
-(3,'Sadia Islam','sadia@student.edu','$2y$10$QdyyYxMIXiDhKa5Z5RQQleDlvTh7rHKt5F17h6pDTKVvpYl97Qqv6','01711000003','Student','Active'),
+(1,'Amina Rahman','amina.rahman@g.bracu.ac.bd','$2y$10$QdyyYxMIXiDhKa5Z5RQQleDlvTh7rHKt5F17h6pDTKVvpYl97Qqv6','01711000001','Student','Active'),
+(2,'Nafis Karim','nafis.karim@g.bracu.ac.bd','$2y$10$QdyyYxMIXiDhKa5Z5RQQleDlvTh7rHKt5F17h6pDTKVvpYl97Qqv6','01711000002','Student','Active'),
+(3,'Sadia Islam','sadia.islam@g.bracu.ac.bd','$2y$10$QdyyYxMIXiDhKa5Z5RQQleDlvTh7rHKt5F17h6pDTKVvpYl97Qqv6','01711000003','Student','Active'),
 (4,'Campus Administrator','admin@campus.edu','$2y$10$ukKsDTOXjBZl86h9rlZG0uSNiolHOWSunE32flWnHY24fhkEnV7pC','01711000000','Admin','Active');
 
 INSERT INTO students (user_id,student_number,department,academic_year) VALUES
@@ -37,6 +37,7 @@ INSERT INTO event_registration (registration_id,student_user_id,event_id,registr
 INSERT INTO announcement (publisher_user_id,club_id,title,message,announcement_type,expiry_date,status) VALUES
 (1,1,'Build Night registration is open','Bring your laptop and your best campus idea. Team matching will happen at the venue.','Event Update','2026-08-28','Active'),
 (4,NULL,'Welcome to CampusHub','Explore clubs and events from one shared campus platform.','System Notice','2026-12-31','Active');
+UPDATE announcement SET notified_at=published_at WHERE status='Active';
 
 INSERT INTO notification (recipient_user_id,notification_type,message,is_read) VALUES
 (2,'Registration Confirmation','Your registration for Build Night is confirmed.',0),

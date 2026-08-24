@@ -110,6 +110,20 @@ document.querySelectorAll('form[data-ajax]').forEach((form) => {
         submitter.textContent = result.data.state === 'registered' ? 'Registered ✓ · Cancel' : 'Claim my place';
         if (result.data.state === 'registered') submitter.dataset.confirm = 'Cancel your registration?';
         else delete submitter.dataset.confirm;
+      } else if (form.dataset.ajax.includes('attendance')) {
+        Object.entries(result.data.counts || {}).forEach(([key, value]) => {
+          const counter = document.querySelector(`[data-attendance-count="${key}"]`);
+          if (counter) counter.textContent = value;
+        });
+        setTimeout(() => window.location.reload(), 550);
+      } else if (form.dataset.ajax.includes('notification')) {
+        const unread = document.querySelector('[data-unread-count]');
+        if (unread) { unread.textContent = result.data.unread_count; unread.hidden = result.data.unread_count === 0; }
+        if (result.data.notification_id) form.closest('[data-notification]')?.classList.remove('unread');
+        else document.querySelectorAll('[data-notification]').forEach((item) => item.classList.remove('unread'));
+        form.remove();
+      } else if (form.dataset.ajax.includes('announcement')) {
+        setTimeout(() => { window.location.href = 'announcements.php'; }, 550);
       } else if (form.querySelector('[name="action"]')?.value === 'request_join') {
         submitter.textContent = 'Request pending'; submitter.disabled = true;
         const state = form.closest('.club-card')?.querySelector('[data-membership-state]');
@@ -131,6 +145,53 @@ document.querySelectorAll('form[data-ajax]').forEach((form) => {
     }
   });
 });
+
+document.querySelectorAll('[data-qr]').forEach((element) => {
+  if (window.QRCode) new QRCode(element, { text: element.dataset.qr, width: 150, height: 150, colorDark: '#17201c', colorLight: '#fbf8f1', correctLevel: QRCode.CorrectLevel.H });
+});
+
+document.querySelectorAll('[data-fill-lookup]').forEach((button) => button.addEventListener('click', () => {
+  const input = document.querySelector('[data-attendance-lookup]');
+  if (input) { input.value = button.dataset.fillLookup; input.focus(); }
+}));
+
+const scannerVideo = document.querySelector('[data-qr-video]');
+const scannerCanvas = document.querySelector('[data-qr-canvas]');
+const scannerMessage = document.querySelector('[data-scanner-message]');
+const scannerStart = document.querySelector('[data-start-scanner]');
+const scannerStop = document.querySelector('[data-stop-scanner]');
+let scannerStream = null;
+let scannerFrame = null;
+const stopScanner = () => {
+  cancelAnimationFrame(scannerFrame); scannerStream?.getTracks().forEach((track) => track.stop()); scannerStream = null;
+  if (scannerVideo) scannerVideo.srcObject = null;
+  if (scannerStart) scannerStart.hidden = false;
+  if (scannerStop) scannerStop.hidden = true;
+};
+if (scannerStart && scannerVideo && scannerCanvas) {
+  scannerStart.addEventListener('click', async () => {
+    try {
+      scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      scannerVideo.srcObject = scannerStream; await scannerVideo.play(); scannerStart.hidden = true; scannerStop.hidden = false;
+      const context = scannerCanvas.getContext('2d', { willReadFrequently: true });
+      const scan = () => {
+        if (!scannerStream) return;
+        if (scannerVideo.readyState === scannerVideo.HAVE_ENOUGH_DATA) {
+          scannerCanvas.width = scannerVideo.videoWidth; scannerCanvas.height = scannerVideo.videoHeight;
+          context.drawImage(scannerVideo, 0, 0); const image = context.getImageData(0, 0, scannerCanvas.width, scannerCanvas.height);
+          const code = window.jsQR?.(image.data, image.width, image.height, { inversionAttempts: 'dontInvert' });
+          if (code?.data) {
+            document.querySelector('[data-attendance-lookup]').value = code.data;
+            document.querySelector('[data-attendance-method]').value = 'QR';
+            scannerMessage.textContent = 'QR captured. Confirm the student, then mark attendance.'; stopScanner(); return;
+          }
+        }
+        scannerFrame = requestAnimationFrame(scan);
+      }; scan();
+    } catch (error) { scannerMessage.textContent = 'Camera unavailable. Use email, student ID, or token below.'; stopScanner(); }
+  });
+  scannerStop?.addEventListener('click', stopScanner);
+}
 
 const eventGrid = document.querySelector('[data-event-view]');
 const viewButtons = [...document.querySelectorAll('[data-view]')];

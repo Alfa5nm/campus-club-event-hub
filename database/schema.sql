@@ -167,6 +167,7 @@ CREATE TABLE announcement (
   published_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   expiry_date DATE NULL,
   status ENUM('Draft','Active','Expired','Removed') NOT NULL DEFAULT 'Active',
+  notified_at DATETIME NULL,
   CONSTRAINT fk_announcement_publisher FOREIGN KEY (publisher_user_id) REFERENCES users(user_id),
   CONSTRAINT fk_announcement_club FOREIGN KEY (club_id) REFERENCES clubs(club_id) ON DELETE CASCADE,
   INDEX idx_announcement_active (status, expiry_date)

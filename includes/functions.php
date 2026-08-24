@@ -83,3 +83,51 @@ function active_page(string $file): string
 {
     return basename($_SERVER['PHP_SELF']) === $file ? 'active' : '';
 }
+
+function managed_clubs(): array
+{
+    if (!user()) return [];
+    if (is_admin()) return db()->query("SELECT club_id, club_name FROM clubs WHERE status='Active' ORDER BY club_name")->fetchAll();
+    $marks = implode(',', array_fill(0, count(executive_roles()), '?'));
+    $stmt = db()->prepare("SELECT c.club_id,c.club_name FROM club_membership cm JOIN clubs c ON c.club_id=cm.club_id WHERE cm.student_user_id=? AND cm.approval_status='Approved' AND cm.membership_status='Active' AND cm.member_role IN ($marks) ORDER BY c.club_name");
+    $stmt->execute(array_merge([(int) user()['user_id']], executive_roles()));
+    return $stmt->fetchAll();
+}
+
+function notify_user(int $userId, string $type, string $message): void
+{
+    $stmt = db()->prepare('INSERT INTO notification (recipient_user_id,notification_type,message) VALUES (?,?,?)');
+    $stmt->execute([$userId, mb_substr($type, 0, 80), mb_substr($message, 0, 500)]);
+}
+
+function unread_notification_count(): int
+{
+    if (!user()) return 0;
+    $stmt = db()->prepare('SELECT COUNT(*) FROM notification WHERE recipient_user_id=? AND is_read=0');
+    $stmt->execute([(int) user()['user_id']]);
+    return (int) $stmt->fetchColumn();
+}
+
+function save_announcement(array $input): array
+{
+    $id=(int)($input['announcement_id']??0);$clubId=($input['club_id']??'')===''?null:(int)$input['club_id'];
+    $title=trim($input['title']??'');$message=trim($input['message']??'');$type=$input['announcement_type']??'';$status=$input['status']??'Draft';$expiry=trim($input['expiry_date']??'')?:null;
+    $types=['Club Notice','Event Update','Event Cancellation','Registration Extension','Meeting Notice','System Notice'];$states=['Draft','Active','Expired','Removed'];
+    if($title===''||$message===''||!in_array($type,$types,true)||!in_array($status,$states,true))throw new InvalidArgumentException('Complete all required announcement fields.');
+    if($clubId===null&&!is_admin())throw new DomainException('Only administrators can publish system-wide announcements.');
+    if($clubId!==null&&!can_manage_club($clubId))throw new DomainException('You cannot publish for that club.');
+    if($expiry&&$expiry<date('Y-m-d')&&$status==='Active')throw new InvalidArgumentException('An active announcement cannot already be expired.');
+    db()->beginTransaction();
+    try{
+        $prior=null;if($id){$s=db()->prepare('SELECT * FROM announcement WHERE announcement_id=? FOR UPDATE');$s->execute([$id]);$prior=$s->fetch();if(!$prior)throw new RuntimeException('Announcement not found.');if($prior['club_id']===null&&!is_admin())throw new DomainException('Not authorized.');if($prior['club_id']!==null&&!can_manage_club((int)$prior['club_id']))throw new DomainException('Not authorized.');db()->prepare('UPDATE announcement SET club_id=?,title=?,message=?,announcement_type=?,expiry_date=?,status=? WHERE announcement_id=?')->execute([$clubId,$title,$message,$type,$expiry,$status,$id]);}
+        else{db()->prepare('INSERT INTO announcement (publisher_user_id,club_id,title,message,announcement_type,expiry_date,status) VALUES (?,?,?,?,?,?,?)')->execute([(int)user()['user_id'],$clubId,$title,$message,$type,$expiry,$status]);$id=(int)db()->lastInsertId();}
+        $notifiedAt=$prior['notified_at']??null;$sent=0;
+        if($status==='Active'&&!$notifiedAt){
+            if($clubId===null)$recipients=db()->query("SELECT user_id FROM users WHERE status='Active'")->fetchAll(PDO::FETCH_COLUMN);
+            else{$r=db()->prepare("SELECT student_user_id FROM club_membership WHERE club_id=? AND approval_status='Approved' AND membership_status='Active'");$r->execute([$clubId]);$recipients=$r->fetchAll(PDO::FETCH_COLUMN);}
+            foreach(array_unique(array_map('intval',$recipients)) as $recipient){notify_user($recipient,$type,$title.': '.$message);$sent++;}
+            db()->prepare('UPDATE announcement SET notified_at=NOW() WHERE announcement_id=?')->execute([$id]);
+        }
+        db()->commit();return ['announcement_id'=>$id,'status'=>$status,'recipient_count'=>$sent];
+    }catch(Throwable $e){if(db()->inTransaction())db()->rollBack();throw $e;}
+}

@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-const DB_HOST = '127.0.0.1';
-const DB_PORT = '3306';
-const DB_NAME = 'campus_club_hub';
-const DB_USER = 'root';
-const DB_PASS = '';
+define('DB_HOST', getenv('CAMPUSHUB_DB_HOST') ?: '127.0.0.1');
+define('DB_PORT', getenv('CAMPUSHUB_DB_PORT') ?: '3306');
+define('DB_NAME', getenv('CAMPUSHUB_DB_NAME') ?: 'campus_club_hub');
+define('DB_USER', getenv('CAMPUSHUB_DB_USER') ?: 'root');
+define('DB_PASS', getenv('CAMPUSHUB_DB_PASS') ?: '');
 
 function db(): PDO
 {
