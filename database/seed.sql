@@ -32,11 +32,11 @@ INSERT INTO events (event_id,club_id,created_by_user_id,title,description,event_
 (3,3,1,'Campus Clean-up Morning','Volunteer with friends to make the central campus greener.','Volunteering','2026-09-10','08:00:00','11:00:00','Campus Gate 2',60,'2026-09-08','Upcoming');
 
 INSERT INTO event_registration (registration_id,student_user_id,event_id,registration_status,qr_token) VALUES
-(1,2,1,'Registered',SHA2('registration-1',256)),(2,1,2,'Registered',SHA2('registration-2',256));
+(1,2,1,'Registered',NULL),(2,1,2,'Registered',NULL);
 
 INSERT INTO announcement (publisher_user_id,club_id,title,message,announcement_type,expiry_date,status) VALUES
-(1,1,'Build Night registration is open','Bring your laptop and your best campus idea. Team matching will happen at the venue.','Event Update','2026-08-28','Active'),
-(4,NULL,'Welcome to CampusHub','Explore clubs and events from one shared campus platform.','System Notice','2026-12-31','Active');
+(1,1,'Bring your laptop and your best campus idea','Bring your laptop and your best campus idea. Team matching will happen at the venue.','Club Notice',NULL,'Active'),
+(4,NULL,'Explore clubs and events from one shared campus platform','Explore clubs and events from one shared campus platform.','System Notice',NULL,'Active');
 UPDATE announcement SET notified_at=published_at WHERE status='Active';
 
 INSERT INTO notification (recipient_user_id,notification_type,message,is_read) VALUES

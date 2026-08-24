@@ -27,7 +27,7 @@ $unreadCount = $currentUser ? unread_notification_count() : 0;
         <?php if ($currentUser): ?>
             <a class="<?= active_page('memberships.php') ?>" href="memberships.php">Memberships</a>
             <?php if ($managedNavigation): ?><a class="<?= active_page('attendance.php') ?>" href="attendance.php">Attendance</a><a class="<?= active_page('announcements.php') ?>" href="announcements.php">Publish</a><?php endif; ?>
-            <a class="<?= active_page('certificates.php') ?>" href="certificates.php">Passes</a>
+            <a class="<?= active_page('certificates.php') ?>" href="certificates.php">Certificates</a>
             <a class="nav-notice <?= active_page('notifications.php') ?>" href="notifications.php">Inbox<?php if($unreadCount):?><b data-unread-count><?=$unreadCount?></b><?php endif;?></a>
             <a class="<?= active_page('dashboard.php') ?>" href="dashboard.php">Dashboard</a>
             <a class="profile-link" href="dashboard.php"><span><?= e(strtoupper(substr($currentUser['full_name'],0,1))) ?></span><?= e(explode(' ',$currentUser['full_name'])[0]) ?></a>

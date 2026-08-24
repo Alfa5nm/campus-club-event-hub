@@ -138,7 +138,7 @@ Additional relations:
 
 `club_membership` resolves the many-to-many relationship between students and clubs. It also stores facts about that relationship: approval, role, join date, and membership status.
 
-`event_registration` resolves the many-to-many relationship between students and events. It stores registration status, QR token, cancellation reason, and timestamps.
+`event_registration` resolves the many-to-many relationship between students and events. It stores registration status, cancellation reason, and timestamps. The nullable `qr_token` column remains only for backward compatibility and is not used by the current workflow.
 
 These values do not belong solely to a student or solely to a club/event; they belong to the relationship between them.
 
@@ -234,11 +234,11 @@ Every event contains `club_id`, so every event belongs to exactly one club. `cre
 ### Event management
 
 1. The event editor lists only manageable clubs.
-2. On save, PHP validates title, date, deadline, and positive capacity.
-3. Creating inserts an event with its club and creator.
-4. Editing first checks authority against the event’s stored club.
-5. Cancelling preserves the event record but changes its status.
-6. Deleting removes the event; related registrations cascade through the foreign key.
+2. The compact editor requires only club, title, date, venue, and positive capacity.
+3. Creating publishes an Upcoming event with category `General`, start time `09:00`, deadline equal to the event date, and a short default description.
+4. Editing changes only the five visible values and preserves other stored metadata.
+5. Editing first checks authority against the event’s stored club.
+6. Cancelling preserves the event record but changes its status; deleting remains available for administrative cleanup.
 
 ## 4.5 Files to know
 
@@ -256,7 +256,7 @@ Every event contains `club_id`, so every event belongs to exactly one club. `cre
 3. Open Memberships and show the club-specific member queue.
 4. Approve a pending member; explain that the row changes only after JSON success.
 5. Change a member role and explain club-scoped executive authority.
-6. Open Events and create a new event for the assigned club.
+6. Open Events and create a published event using the five-field form.
 7. Attempt to explain why another club is not manageable.
 8. Edit the event, then cancel it rather than deleting it to demonstrate status preservation.
 
@@ -287,9 +287,9 @@ Cancellation preserves history and lets registrations or notifications reference
 
 ## 5.1 Individual feature statement
 
-**“My feature area safely connects students to events. It validates event status, deadlines and capacity, creates a unique QR token, supports cancellation and re-registration, and feeds each confirmed event into the student dashboard.”**
+**“My feature area safely connects students to events. It validates event status, deadlines and capacity, supports cancellation and re-registration, and feeds each confirmed event into the student dashboard and attendance roster.”**
 
-The working independent feature now covers the complete participation chain: registration, QR pass rendering, executive check-in, attendance synchronization, certificate generation, protected download, revocation, and public verification.
+The working independent feature now covers the complete participation chain: registration, executive roster attendance, status synchronization, certificate generation, protected download, revocation, and public verification.
 
 ## 5.2 Implemented now
 
@@ -303,14 +303,14 @@ The working independent feature now covers the complete participation chain: reg
 - Cancelled/non-upcoming event validation
 - Student-only registration
 - Duplicate-safe registration and reactivation after cancellation
-- Cryptographically unpredictable 64-character QR token generation
+- Registration rows created without unnecessary check-in tokens
 - Registration cancellation with stored reason
 - Transactional registration and row locking
 - Student dashboard list of confirmed upcoming events
 - Progressive AJAX registration/cancellation with normal form fallback
-- Locally rendered QR passes for every active registration
-- Camera scanning plus email, student-number, and token lookup
-- Club-scoped QR/manual Present and Absent actions
+- Direct event-roster display for every active registration
+- One-click Present and Absent actions beside each student
+- Club-scoped attendance marking and correction
 - Transactional attendance and registration-status synchronization
 - Automatic certificate PDF generation for Present attendance
 - Certificate revocation when attendance changes to Absent
@@ -328,7 +328,7 @@ This is the central associative entity between `students` and `events`.
 | `student_user_id` | Registered student |
 | `event_id` | Selected event |
 | `registration_status` | Registered, Cancelled, Attended, or Absent |
-| `qr_token` | Unique payload rendered and scanned by the attendance workflow |
+| `qr_token` | Nullable legacy compatibility field; new registrations leave it empty |
 | `cancellation_reason` | Audit detail for cancellation |
 | `updated_at` | Last state-change timestamp |
 
@@ -350,16 +350,15 @@ Registration is deliberately transactional:
 4. Reject missing or non-Upcoming events.
 5. Reject an expired registration deadline.
 6. Reject an event at maximum capacity.
-7. Generate a SHA-256 token using student ID, event ID, and random bytes.
-8. Insert the registration, or reactivate the existing cancelled relationship.
-9. Commit only after every check succeeds.
-10. Roll back if any validation or database operation fails.
+7. Insert the registration with no check-in token, or reactivate the existing cancelled relationship.
+8. Commit only after every check succeeds.
+9. Roll back if any validation or database operation fails.
 
 `FOR UPDATE` matters when two students attempt to take the final available place simultaneously. Locking serializes the capacity decision inside the transaction.
 
 ## 5.5 Cancellation and re-registration design
 
-Cancellation updates the existing row rather than deleting it. This preserves registration history and the cancellation reason. If the student later registers again while the event is eligible, the composite unique key routes the operation to `ON DUPLICATE KEY UPDATE`, which restores Registered status, creates a new QR token, and clears the cancellation reason.
+Cancellation updates the existing row rather than deleting it. This preserves registration history and the cancellation reason. If the student later registers again while the event is eligible, the composite unique key routes the operation to `ON DUPLICATE KEY UPDATE`, which restores Registered status, clears the cancellation reason, and leaves the legacy token empty.
 
 ## 5.6 Files to know
 
@@ -379,7 +378,7 @@ Cancellation updates the existing row rather than deleting it. This preserves re
 6. Return and cancel the registration; show the count decrement.
 7. Explain the saved Cancelled row and cancellation reason.
 8. Explain the deadline/full/cancelled validation cases using the event card fields and code flow.
-9. Open Passes, show the locally rendered QR, and scan or select the registration from Attendance.
+9. Open Attendance, select the event, and mark a registered student directly from the roster.
 10. Mark Present, download the generated PDF, and verify its public code.
 11. Correct the record to Absent and show that the certificate becomes Revoked.
 
@@ -391,8 +390,8 @@ Capacity checking and registration insertion must succeed as one unit. Otherwise
 **How are duplicate registrations prevented?**  
 The composite unique key on student and event allows only one relationship row. Re-registration updates a cancelled row rather than creating another.
 
-**Is the QR token a QR image?**  
-No. It is the secure unique payload that a QR image can encode. Storing the token separately keeps presentation generation independent of database identity.
+**Why does the schema still contain `qr_token`?**
+It remains nullable so existing XAMPP installations upgrade safely. New registrations do not generate or use tokens, and attendance targets the registration ID selected from the authorized event roster.
 
 **Why keep cancelled registrations?**  
 It preserves audit history, supports a cancellation reason, and allows controlled reactivation without duplicate records.
@@ -432,7 +431,7 @@ The implemented independent feature combines the role-aware dashboard with a wor
 - Homepage database statistics, upcoming stories, activity, and calls to action
 - Animated statistics, reveal motion, toast feedback, and reduced interface friction
 - Seeded announcements and notifications for demonstration
-- Club and system announcement create/edit/activate/expire/remove lifecycle
+- Two-field club and system announcement publishing with generated titles
 - One-time transaction-protected notification fan-out to eligible recipients
 - Paginated notification inbox, unread badge, individual read, and read-all actions
 - Automatic certificate, attendance, and announcement notifications
@@ -479,9 +478,9 @@ These are derived reports. They are calculated from source tables rather than st
 
 - `club_id = NULL` represents a system-wide announcement.
 - A club ID represents a club-specific announcement.
-- Expiry and status determine whether it should remain active.
+- The simplified publisher activates new notices immediately; legacy status and expiry columns remain compatible.
 
-The publishing desk supports drafts and first activation, records `notified_at` to prevent duplicate fan-out, and automatically expires dated notices. The inbox supports paginated recipient-only reading, individual mark-as-read, read-all, and a live unread badge.
+The publishing desk asks only for audience and message, derives a concise title and notice type, activates the notice immediately, and records `notified_at` to prevent duplicate fan-out. The inbox supports paginated recipient-only reading, individual mark-as-read, read-all, and a live unread badge.
 
 ## 6.6 Files to know
 
@@ -565,10 +564,10 @@ This is the project’s strongest integration story: authorization creates manag
 | Memberships | Yes | Yes | Request/approve/reject/remove/role | Diha |
 | Events | Yes | Yes | Create/read/update/cancel/delete | Diha |
 | Event registration | Yes | Yes | Register/cancel/reactivate | Rifat |
-| Attendance | Yes | Yes | QR/manual mark and correction | Rifat |
+| Attendance | Yes | Yes | Direct roster mark and correction | Rifat |
 | Certificates | Yes | Yes | Issue/revoke/download/verify | Rifat |
 | Notifications | Yes | Yes | Paginated read/read-all/fan-out | Faisal |
-| Announcements | Yes | Yes | Draft/activate/edit/expire/remove | Faisal |
+| Announcements | Yes | Yes | Audience/message publish, edit, remove | Faisal |
 | Feedback | Yes | Not yet | Schema-ready | Faisal |
 | Recommendations | Derived | Limited dashboard context | Next phase | Faisal |
 | Leaderboard/reports | Derived | Dashboard summaries | Partial | Faisal |
@@ -594,8 +593,8 @@ Fresh seed data uses BRACU-format student addresses, and newly created student a
 ### 9.3 Suggested presentation order
 
 1. Shared introduction: problem, roles, technology, and normalized model.
-2. Diha: club membership authority followed by event creation.
-3. Rifat: register, show the QR pass, check in, download the certificate, and verify its public code.
+2. Diha: club membership authority followed by five-field event creation.
+3. Rifat: register, mark attendance from the event roster, download the certificate, and verify its public code.
 4. Faisal: publish a club notice, show the one-time inbox delivery, then demonstrate read state and role-aware dashboards.
 5. Shared conclusion: security, progressive enhancement, future modules.
 
@@ -653,7 +652,7 @@ The pages use live database counts, instant search and filters, remembered event
 | `database/seed.sql` | Mock users, clubs, memberships, events, and activity |
 | `docs/campus_club_hub_normalized.drawio` | Visual normalized schema |
 | `dashboard.php` | Student/executive/admin dashboard and module shortcuts |
-| `attendance.php` / `certificates.php` / `verify-certificate.php` | Attendance, passes, downloads, and verification UI |
+| `attendance.php` / `certificates.php` / `verify-certificate.php` | Roster attendance, downloads, and verification UI |
 | `announcements.php` / `notifications.php` | Publishing and recipient inbox UI |
 | `api/membership.php` / `api/event-registration.php` / `api/attendance.php` | Membership and transactional participation JSON actions |
 | `api/announcement.php` / `api/notification.php` | Fan-out and read-state JSON actions |
@@ -674,8 +673,8 @@ The pages use live database counts, instant search and filters, remembered event
 
 ### Rifat Mahmud
 
-**Showcase:** QR registration, attendance check-in, certificate generation, and public verification.
-**Best proof:** show a QR pass, mark Present, download the PDF, verify its code, then demonstrate revocation.
+**Showcase:** registration roster, attendance marking, certificate generation, and public verification.
+**Best proof:** select an event, mark a registered student Present, download the PDF, verify its code, then demonstrate revocation.
 **Core concept:** one transactional participation chain from registration to verified certificate.
 
 ### Faisal Mahbub

@@ -24,8 +24,7 @@ try {
     if (!$event || $event['status'] !== 'Upcoming') throw new RuntimeException('This event is not accepting registrations.');
     if ($event['registration_deadline'] && $event['registration_deadline'] < date('Y-m-d')) throw new RuntimeException('The registration deadline has passed.');
     if ((int)$event['taken'] >= (int)$event['maximum_participants']) throw new RuntimeException('This event has reached capacity.');
-    $token = hash('sha256', $userId . ':' . $eventId . ':' . random_bytes(16));
-    db()->prepare("INSERT INTO event_registration (student_user_id,event_id,registration_status,qr_token) VALUES (?,?,'Registered',?) ON DUPLICATE KEY UPDATE registration_status='Registered',qr_token=VALUES(qr_token),cancellation_reason=NULL,updated_at=CURRENT_TIMESTAMP")->execute([$userId,$eventId,$token]);
+    db()->prepare("INSERT INTO event_registration (student_user_id,event_id,registration_status,qr_token) VALUES (?,?,'Registered',NULL) ON DUPLICATE KEY UPDATE registration_status='Registered',qr_token=NULL,cancellation_reason=NULL,updated_at=CURRENT_TIMESTAMP")->execute([$userId,$eventId]);
     db()->commit();
     json_response(true, 'Your place is confirmed.', ['state'=>'registered','registration_count'=>(int)$event['taken']+1,'capacity'=>(int)$event['maximum_participants']]);
 } catch (Throwable $exception) {

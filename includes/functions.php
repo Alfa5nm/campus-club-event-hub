@@ -111,12 +111,11 @@ function unread_notification_count(): int
 function save_announcement(array $input): array
 {
     $id=(int)($input['announcement_id']??0);$clubId=($input['club_id']??'')===''?null:(int)$input['club_id'];
-    $title=trim($input['title']??'');$message=trim($input['message']??'');$type=$input['announcement_type']??'';$status=$input['status']??'Draft';$expiry=trim($input['expiry_date']??'')?:null;
-    $types=['Club Notice','Event Update','Event Cancellation','Registration Extension','Meeting Notice','System Notice'];$states=['Draft','Active','Expired','Removed'];
-    if($title===''||$message===''||!in_array($type,$types,true)||!in_array($status,$states,true))throw new InvalidArgumentException('Complete all required announcement fields.');
+    $message=trim($input['message']??'');$type=$clubId===null?'System Notice':'Club Notice';$status='Active';$expiry=null;
+    $plain=preg_replace('/\s+/u',' ',strip_tags($message));$title=function_exists('mb_substr')?mb_substr($plain,0,72):substr($plain,0,72);$title=rtrim($title," \t\n\r\0\x0B,.;:-");
+    if($message===''||$title==='')throw new InvalidArgumentException('Enter an announcement message.');
     if($clubId===null&&!is_admin())throw new DomainException('Only administrators can publish system-wide announcements.');
     if($clubId!==null&&!can_manage_club($clubId))throw new DomainException('You cannot publish for that club.');
-    if($expiry&&$expiry<date('Y-m-d')&&$status==='Active')throw new InvalidArgumentException('An active announcement cannot already be expired.');
     db()->beginTransaction();
     try{
         $prior=null;if($id){$s=db()->prepare('SELECT * FROM announcement WHERE announcement_id=? FOR UPDATE');$s->execute([$id]);$prior=$s->fetch();if(!$prior)throw new RuntimeException('Announcement not found.');if($prior['club_id']===null&&!is_admin())throw new DomainException('Not authorized.');if($prior['club_id']!==null&&!can_manage_club((int)$prior['club_id']))throw new DomainException('Not authorized.');db()->prepare('UPDATE announcement SET club_id=?,title=?,message=?,announcement_type=?,expiry_date=?,status=? WHERE announcement_id=?')->execute([$clubId,$title,$message,$type,$expiry,$status,$id]);}

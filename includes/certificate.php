@@ -60,21 +60,21 @@ function issue_certificate(int $attendanceId): array
     return ['certificate_id'=>(int)db()->lastInsertId(),'certificate_number'=>$number,'verification_code'=>$code,'file_path'=>$relative,'status'=>'Active'];
 }
 
-function mark_attendance(int $eventId, string $lookup, string $status, string $method): array
+function mark_attendance(int $eventId, int $registrationId, string $status): array
 {
-    if (!in_array($status, ['Present','Absent'], true) || !in_array($method, ['QR','Manual'], true)) throw new InvalidArgumentException('Invalid attendance state.');
+    if ($registrationId < 1 || !in_array($status, ['Present','Absent'], true)) throw new InvalidArgumentException('Invalid attendance request.');
     $event = db()->prepare('SELECT club_id,title FROM events WHERE event_id=?'); $event->execute([$eventId]); $eventRow=$event->fetch();
     if (!$eventRow) throw new RuntimeException('Event not found.');
     if (!can_manage_club((int)$eventRow['club_id'])) throw new DomainException('You are not authorized to manage this event.');
-    $sql = "SELECT er.registration_id,er.student_user_id,er.registration_status,u.full_name,u.email FROM event_registration er JOIN users u ON u.user_id=er.student_user_id JOIN students s ON s.user_id=u.user_id WHERE er.event_id=? AND (er.qr_token=? OR u.email=? OR s.student_number=?)";
-    $stmt=db()->prepare($sql);$stmt->execute([$eventId,$lookup,$lookup,$lookup]);$registration=$stmt->fetch();
-    if(!$registration) throw new RuntimeException('No matching registration was found for this event.');
+    $sql = "SELECT er.registration_id,er.student_user_id,er.registration_status,u.full_name,u.email FROM event_registration er JOIN users u ON u.user_id=er.student_user_id WHERE er.event_id=? AND er.registration_id=?";
+    $stmt=db()->prepare($sql);$stmt->execute([$eventId,$registrationId]);$registration=$stmt->fetch();
+    if(!$registration) throw new RuntimeException('That registration does not belong to this event.');
     if($registration['registration_status']==='Cancelled') throw new RuntimeException('Cancelled registrations cannot be checked in.');
     $markerId=null;
     if(!is_admin()){$m=db()->prepare("SELECT membership_id FROM club_membership WHERE student_user_id=? AND club_id=? AND approval_status='Approved' AND membership_status='Active' LIMIT 1");$m->execute([(int)user()['user_id'],(int)$eventRow['club_id']]);$markerId=$m->fetchColumn()?:null;}
     db()->beginTransaction();
     try {
-        db()->prepare("INSERT INTO attendance (registration_id,marked_by_membership_id,attendance_status,attendance_method,check_in_time) VALUES (?,?,?,?,IF(?='Present',NOW(),NULL)) ON DUPLICATE KEY UPDATE marked_by_membership_id=VALUES(marked_by_membership_id),attendance_status=VALUES(attendance_status),attendance_method=VALUES(attendance_method),check_in_time=VALUES(check_in_time),marked_at=CURRENT_TIMESTAMP")->execute([(int)$registration['registration_id'],$markerId,$status,$method,$status]);
+        db()->prepare("INSERT INTO attendance (registration_id,marked_by_membership_id,attendance_status,attendance_method,check_in_time) VALUES (?,?,?,'Manual',IF(?='Present',NOW(),NULL)) ON DUPLICATE KEY UPDATE marked_by_membership_id=VALUES(marked_by_membership_id),attendance_status=VALUES(attendance_status),attendance_method='Manual',check_in_time=VALUES(check_in_time),marked_at=CURRENT_TIMESTAMP")->execute([(int)$registration['registration_id'],$markerId,$status,$status]);
         $a=db()->prepare('SELECT attendance_id FROM attendance WHERE registration_id=?');$a->execute([(int)$registration['registration_id']]);$attendanceId=(int)$a->fetchColumn();
         db()->prepare('UPDATE event_registration SET registration_status=? WHERE registration_id=?')->execute([$status==='Present'?'Attended':'Absent',(int)$registration['registration_id']]);
         $certificate=null;
