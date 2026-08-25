@@ -31,6 +31,9 @@ The default connection is MySQL user `root` with an empty password. Change `conf
 - Student/executive: `amina.rahman@g.bracu.ac.bd` / `Password123!`
 - Student: `nafis.karim@g.bracu.ac.bd` / `Password123!`
 - Administrator: `admin@campus.edu` / `Admin123!`
+- Showcase teammates: `rifat.mahmud@g.bracu.ac.bd`, `faisal.mahbub@g.bracu.ac.bd`, and `tarannum.diha@g.bracu.ac.bd` / `Password123!`
+
+The fresh-install seed includes 13 users, 8 clubs, 20 memberships, 12 events, 25 registrations, attendance and certificate history, downloadable demo certificates, feedback, guidance relationships, announcements, notifications, and reset-token lifecycle examples. It deliberately includes Active, Pending, Suspended, Cancelled, Removed, Rejected, Resigned, Present, Absent, read, and unread states for demonstrations and testing.
 
 ## Implemented scope
 
