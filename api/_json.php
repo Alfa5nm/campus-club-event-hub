@@ -19,6 +19,6 @@ if (!user()) {
     json_response(false, 'Please sign in to continue.', ['redirect' => 'login.php'], 401);
 }
 $token = $_POST['csrf'] ?? '';
-if (!$token || !hash_equals($_SESSION['csrf'] ?? '', $token)) {
+if (!csrf_is_valid($token)) {
     json_response(false, 'Your session token expired. Refresh the page and try again.', [], 419);
 }

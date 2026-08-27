@@ -6,9 +6,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
     $action = $_POST['action'] ?? '';
     if ($action === 'read_all') {
-        db()->prepare('UPDATE notification SET is_read=1 WHERE recipient_user_id=?')->execute([$uid]);
+        mark_all_notifications_read($uid);
     } elseif ($action === 'read') {
-        db()->prepare('UPDATE notification SET is_read=1 WHERE notification_id=? AND recipient_user_id=?')->execute([(int)($_POST['notification_id'] ?? 0),$uid]);
+        mark_notification_read($uid, (int) ($_POST['notification_id'] ?? 0));
     }flash('success', 'Notifications updated.');
     redirect('notifications.php');
 }

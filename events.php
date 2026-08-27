@@ -23,40 +23,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'register') {
         try {
-            db()->beginTransaction();
-            $stmt = db()->prepare("SELECT e.*, COUNT(er.registration_id) AS taken FROM events e LEFT JOIN event_registration er ON er.event_id=e.event_id AND er.registration_status='Registered' WHERE e.event_id=? GROUP BY e.event_id FOR UPDATE");
-            $stmt->execute([$eventId]);
-            $event = $stmt->fetch();
-            $isStudent = db()->prepare('SELECT 1 FROM students WHERE user_id=?');
-            $isStudent->execute([$currentUserId]);
-            if (!$isStudent->fetchColumn()) {
-                throw new RuntimeException('Only student accounts can register for events.');
-            }
-            if (!$event || $event['status'] !== 'Upcoming') {
-                throw new RuntimeException('This event is not accepting registrations.');
-            }
-            if ($event['registration_deadline'] && $event['registration_deadline'] < date('Y-m-d')) {
-                throw new RuntimeException('The registration deadline has passed.');
-            }
-            if ((int)$event['taken'] >= (int)$event['maximum_participants']) {
-                throw new RuntimeException('This event has reached capacity.');
-            }
-            db()->prepare("INSERT INTO event_registration (student_user_id,event_id,registration_status,qr_token) VALUES (?,?,'Registered',NULL) ON DUPLICATE KEY UPDATE registration_status='Registered',qr_token=NULL,cancellation_reason=NULL,updated_at=CURRENT_TIMESTAMP")->execute([$currentUserId,$eventId]);
-            notify_user($currentUserId, 'Registration Confirmation', 'Your registration for ' . $event['title'] . ' is confirmed.');
-            db()->commit();
+            register_for_event($currentUserId, $eventId);
             flash('success', 'Your place is confirmed. The event is now on your dashboard.');
         } catch (Throwable $exception) {
-            if (db()->inTransaction()) {
-                db()->rollBack();
-            }
             flash('error', $exception instanceof RuntimeException ? $exception->getMessage() : 'Registration could not be completed.');
         }
         redirect('events.php');
     }
     if ($action === 'cancel_registration') {
-        db()->prepare("UPDATE event_registration SET registration_status='Cancelled',cancellation_reason='Cancelled by student' WHERE event_id=? AND student_user_id=? AND registration_status='Registered'")->execute([$eventId,$currentUserId]);
-        notify_user($currentUserId, 'Registration Cancellation', 'Your event registration was cancelled.');
-        flash('success', 'Your registration was cancelled.');
+        try {
+            cancel_event_registration($currentUserId, $eventId);
+            flash('success', 'Your registration was cancelled.');
+        } catch (RuntimeException $exception) {
+            flash('error', $exception->getMessage());
+        }
         redirect('events.php');
     }
     if ($action === 'cancel') {
@@ -119,17 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$manageable = [];
-if (user()) {
-    if (is_admin()) {
-        $manageable = db()->query("SELECT club_id,club_name FROM clubs WHERE status='Active' ORDER BY club_name")->fetchAll();
-    } else {
-        $marks = implode(',', array_fill(0, count(executive_roles()), '?'));
-        $stmt = db()->prepare("SELECT c.club_id,c.club_name FROM club_membership cm JOIN clubs c ON c.club_id=cm.club_id WHERE cm.student_user_id=? AND cm.approval_status='Approved' AND cm.membership_status='Active' AND cm.member_role IN ($marks)");
-        $stmt->execute(array_merge([$currentUserId], executive_roles()));
-        $manageable = $stmt->fetchAll();
-    }
-}
+$manageable = managed_clubs();
 $registered = [];
 if ($currentUserId) {
     $stmt = db()->prepare('SELECT event_id,registration_status FROM event_registration WHERE student_user_id=?');

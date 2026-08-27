@@ -56,17 +56,11 @@ $statement->execute($parameters);
 $rows = $statement->fetchAll();
 
 if (($_GET['format'] ?? '') === 'csv') {
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="campushub-report.csv"');
-    $output = fopen('php://output', 'wb');
-    fputcsv($output, ['Club', 'Event', 'Date', 'Capacity', 'Registrations', 'Attendees', 'Certificates', 'Average rating']);
-
-    foreach ($rows as $row) {
-        fputcsv($output, array_values($row));
-    }
-
-    fclose($output);
-    exit;
+    stream_csv(
+        'campushub-report.csv',
+        ['Club', 'Event', 'Date', 'Capacity', 'Registrations', 'Attendees', 'Certificates', 'Average rating'],
+        $rows
+    );
 }
 
 $totals = [

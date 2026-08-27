@@ -13,13 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             save_announcement($_POST);
             flash('success', 'Announcement saved and eligible recipients notified.');
         } else {
-            $id = (int)($_POST['announcement_id'] ?? 0);
-            $s = db()->prepare('SELECT club_id FROM announcement WHERE announcement_id=?');
-            $s->execute([$id]);
-            $club = $s->fetchColumn();
-            if (($club === null && is_admin()) || ($club !== false && can_manage_club((int)$club))) {
-                db()->prepare("UPDATE announcement SET status='Removed' WHERE announcement_id=?")->execute([$id]);
-            }
+            remove_announcement((int) ($_POST['announcement_id'] ?? 0));
+            flash('success', 'Announcement removed.');
         }
     } catch (Throwable $e) {
         flash('error', $e->getMessage());

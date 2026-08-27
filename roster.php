@@ -34,17 +34,11 @@ $statement->execute([$eventId]);
 $students = $statement->fetchAll();
 
 if (($_GET['format'] ?? '') === 'csv') {
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="event-roster-' . $eventId . '.csv"');
-    $output = fopen('php://output', 'wb');
-    fputcsv($output, ['Student', 'Email', 'Student ID', 'Registered at', 'Status']);
-
-    foreach ($students as $student) {
-        fputcsv($output, array_values($student));
-    }
-
-    fclose($output);
-    exit;
+    stream_csv(
+        'event-roster-' . $eventId . '.csv',
+        ['Student', 'Email', 'Student ID', 'Registered at', 'Status'],
+        $students
+    );
 }
 
 $pageTitle = 'Event roster';

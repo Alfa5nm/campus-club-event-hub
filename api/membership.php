@@ -34,63 +34,18 @@ if ($action === 'request_join') {
 }
 
 $membershipId = (int) ($_POST['membership_id'] ?? 0);
-$statement = db()->prepare(
-    'SELECT cm.club_id, cm.student_user_id, c.club_name
-     FROM club_membership cm
-     JOIN clubs c ON c.club_id = cm.club_id
-     WHERE cm.membership_id = ?'
-);
-$statement->execute([$membershipId]);
-$membership = $statement->fetch();
 
-if (!$membership || !can_manage_club((int) $membership['club_id'])) {
-    json_response(false, 'You are not authorized to manage this membership.', [], 403);
+try {
+    $data = update_membership(
+        $membershipId,
+        $action,
+        isset($_POST['member_role']) ? (string) $_POST['member_role'] : null
+    );
+    json_response(true, 'Membership updated.', $data);
+} catch (DomainException $exception) {
+    json_response(false, $exception->getMessage(), [], 403);
+} catch (InvalidArgumentException $exception) {
+    json_response(false, $exception->getMessage(), [], 422);
+} catch (RuntimeException $exception) {
+    json_response(false, $exception->getMessage(), [], 400);
 }
-
-if ($action === 'approve') {
-    db()->prepare(
-        "UPDATE club_membership
-         SET approval_status = 'Approved', membership_status = 'Active'
-         WHERE membership_id = ?"
-    )->execute([$membershipId]);
-    notify_user(
-        (int) $membership['student_user_id'],
-        'Membership Approved',
-        'Your membership in ' . $membership['club_name'] . ' was approved.'
-    );
-} elseif ($action === 'reject') {
-    db()->prepare(
-        "UPDATE club_membership SET approval_status = 'Rejected' WHERE membership_id = ?"
-    )->execute([$membershipId]);
-    notify_user(
-        (int) $membership['student_user_id'],
-        'Membership Rejected',
-        'Your membership request for ' . $membership['club_name'] . ' was rejected.'
-    );
-} elseif ($action === 'remove') {
-    db()->prepare(
-        "UPDATE club_membership SET membership_status = 'Removed' WHERE membership_id = ?"
-    )->execute([$membershipId]);
-    notify_user(
-        (int) $membership['student_user_id'],
-        'Membership Removed',
-        'Your membership in ' . $membership['club_name'] . ' was removed.'
-    );
-} elseif ($action === 'role') {
-    $role = $_POST['member_role'] ?? 'Member';
-
-    if (!in_array($role, array_merge(['Member'], executive_roles()), true)) {
-        json_response(false, 'Invalid member role.', [], 422);
-    }
-
-    db()->prepare(
-        'UPDATE club_membership SET member_role = ? WHERE membership_id = ?'
-    )->execute([$role, $membershipId]);
-} else {
-    json_response(false, 'Unknown membership action.', [], 400);
-}
-
-json_response(true, 'Membership updated.', [
-    'action' => $action,
-    'membership_id' => $membershipId,
-]);

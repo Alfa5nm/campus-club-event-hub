@@ -39,10 +39,6 @@
     align-self: start;
 }
 
-.table-wrap {
-    overflow-x: auto;
-}
-
 .data-table small {
     display: block;
     margin-top: 0.25rem;

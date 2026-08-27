@@ -60,10 +60,30 @@ function verify_csrf(): void
 {
     $token = $_POST['csrf'] ?? '';
 
-    if (!$token || !hash_equals($_SESSION['csrf'] ?? '', $token)) {
+    if (!csrf_is_valid($token)) {
         http_response_code(419);
         exit('The form expired. Please refresh the page and try again.');
     }
+}
+
+function stream_csv(string $filename, array $headers, array $rows): never
+{
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    $output = fopen('php://output', 'wb');
+    fputcsv($output, $headers);
+
+    foreach ($rows as $row) {
+        fputcsv($output, array_values($row));
+    }
+
+    fclose($output);
+    exit;
+}
+
+function csrf_is_valid(string $token): bool
+{
+    return $token !== '' && hash_equals($_SESSION['csrf'] ?? '', $token);
 }
 
 function executive_roles(): array
@@ -104,15 +124,17 @@ function active_page(string $file): string
     return basename($_SERVER['PHP_SELF']) === $file ? 'active' : '';
 }
 
-function managed_clubs(): array
+function managed_clubs(bool $activeOnly = true): array
 {
     if (!user()) {
         return [];
     }
 
     if (is_admin()) {
+        $statusFilter = $activeOnly ? "WHERE status = 'Active'" : '';
+
         return db()->query(
-            "SELECT club_id, club_name FROM clubs WHERE status = 'Active' ORDER BY club_name"
+            "SELECT club_id, club_name FROM clubs $statusFilter ORDER BY club_name"
         )->fetchAll();
     }
 
@@ -125,6 +147,7 @@ function managed_clubs(): array
            AND cm.approval_status = 'Approved'
            AND cm.membership_status = 'Active'
            AND cm.member_role IN ($roleMarks)
+           " . ($activeOnly ? "AND c.status = 'Active'" : '') . "
          ORDER BY c.club_name"
     );
     $statement->execute(array_merge([(int) user()['user_id']], executive_roles()));
@@ -157,6 +180,25 @@ function unread_notification_count(): int
     $statement->execute([(int) user()['user_id']]);
 
     return (int) $statement->fetchColumn();
+}
+
+function mark_notification_read(int $userId, int $notificationId): bool
+{
+    $statement = db()->prepare(
+        'UPDATE notification
+         SET is_read = 1
+         WHERE notification_id = ? AND recipient_user_id = ?'
+    );
+    $statement->execute([$notificationId, $userId]);
+
+    return $statement->rowCount() === 1;
+}
+
+function mark_all_notifications_read(int $userId): void
+{
+    db()->prepare(
+        'UPDATE notification SET is_read = 1 WHERE recipient_user_id = ?'
+    )->execute([$userId]);
 }
 
 function save_announcement(array $input): array
@@ -260,4 +302,29 @@ function save_announcement(array $input): array
 
         throw $exception;
     }
+}
+
+function remove_announcement(int $announcementId): void
+{
+    $statement = db()->prepare(
+        'SELECT club_id FROM announcement WHERE announcement_id = ?'
+    );
+    $statement->execute([$announcementId]);
+    $clubId = $statement->fetchColumn();
+
+    if ($clubId === false) {
+        throw new RuntimeException('Announcement not found.');
+    }
+
+    if ($clubId === null && !is_admin()) {
+        throw new DomainException('You cannot remove this announcement.');
+    }
+
+    if ($clubId !== null && !can_manage_club((int) $clubId)) {
+        throw new DomainException('You cannot remove this announcement.');
+    }
+
+    db()->prepare(
+        "UPDATE announcement SET status = 'Removed' WHERE announcement_id = ?"
+    )->execute([$announcementId]);
 }

@@ -5,46 +5,31 @@ $uid = (int)user()['user_id'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
     $membershipId = (int)($_POST['membership_id'] ?? 0);
-    $s = db()->prepare('SELECT cm.club_id, cm.student_user_id, c.club_name FROM club_membership cm JOIN clubs c ON c.club_id=cm.club_id WHERE cm.membership_id=?');
-    $s->execute([$membershipId]);
-    $membership = $s->fetch();
-    $clubId = (int)($membership['club_id'] ?? 0);
-    if (!$clubId || !can_manage_club($clubId)) {
+    $action = $_POST['action'] ?? '';
+
+    try {
+        $result = update_membership(
+            $membershipId,
+            $action,
+            isset($_POST['member_role']) ? (string) $_POST['member_role'] : null
+        );
+        flash('success', 'Membership updated.');
+        redirect('memberships.php?club=' . $result['club_id']);
+    } catch (DomainException $exception) {
         http_response_code(403);
-        exit('Not authorized.');
-    }$action = $_POST['action'] ?? '';
-    if ($action === 'approve') {
-        db()->prepare("UPDATE club_membership SET approval_status='Approved',membership_status='Active' WHERE membership_id=?")->execute([$membershipId]);
-        notify_user((int)$membership['student_user_id'], 'Membership Approved', 'Your membership in '.$membership['club_name'].' was approved.');
-        flash('success', 'Membership approved.');
-    } elseif ($action === 'reject') {
-        db()->prepare("UPDATE club_membership SET approval_status='Rejected' WHERE membership_id=?")->execute([$membershipId]);
-        notify_user((int)$membership['student_user_id'], 'Membership Rejected', 'Your membership request for '.$membership['club_name'].' was rejected.');
-        flash('success', 'Membership request rejected.');
-    } elseif ($action === 'remove') {
-        db()->prepare("UPDATE club_membership SET membership_status='Removed' WHERE membership_id=?")->execute([$membershipId]);
-        notify_user((int)$membership['student_user_id'], 'Membership Removed', 'Your membership in '.$membership['club_name'].' was removed.');
-        flash('success', 'Member removed.');
-    } elseif ($action === 'role') {
-        $role = $_POST['member_role'] ?? 'Member';
-        if (!in_array($role, array_merge(['Member'], executive_roles()), true)) {
-            $role = 'Member';
-        }db()->prepare('UPDATE club_membership SET member_role=? WHERE membership_id=?')->execute([$role,$membershipId]);
-        flash('success', 'Member role updated.');
-    }redirect('memberships.php?club='.$clubId);
+        exit($exception->getMessage());
+    } catch (InvalidArgumentException $exception) {
+        flash('error', $exception->getMessage());
+        redirect('memberships.php');
+    } catch (RuntimeException $exception) {
+        flash('error', $exception->getMessage());
+        redirect('memberships.php');
+    }
 }
 $s = db()->prepare('SELECT cm.*,c.club_name,c.category FROM club_membership cm JOIN clubs c ON c.club_id=cm.club_id WHERE cm.student_user_id=? ORDER BY cm.join_date DESC');
 $s->execute([$uid]);
 $mine = $s->fetchAll();
-$managed = [];
-if (is_admin()) {
-    $managed = db()->query('SELECT club_id,club_name FROM clubs ORDER BY club_name')->fetchAll();
-} else {
-    $marks = implode(',', array_fill(0, count(executive_roles()), '?'));
-    $s = db()->prepare("SELECT c.club_id,c.club_name FROM club_membership cm JOIN clubs c ON c.club_id=cm.club_id WHERE cm.student_user_id=? AND cm.approval_status='Approved' AND cm.membership_status='Active' AND cm.member_role IN ($marks)");
-    $s->execute(array_merge([$uid], executive_roles()));
-    $managed = $s->fetchAll();
-}
+$managed = managed_clubs(false);
 $selected = (int)($_GET['club'] ?? ($managed[0]['club_id'] ?? 0));
 $members = [];
 if ($selected && can_manage_club($selected)) {
