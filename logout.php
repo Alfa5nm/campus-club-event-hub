@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/includes/bootstrap.php';
 $_SESSION = [];
 if (ini_get('session.use_cookies')) {
@@ -6,4 +7,6 @@ if (ini_get('session.use_cookies')) {
     setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
 }
 session_destroy();
-session_start(); flash('success', 'You have been signed out.'); redirect('login.php');
+session_start();
+flash('success', 'You have been signed out.');
+redirect('login.php');

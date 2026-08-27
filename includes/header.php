@@ -24,13 +24,18 @@ $unreadCount = $currentUser ? unread_notification_count() : 0;
     <nav class="nav-links" aria-label="Primary navigation">
         <a class="<?= active_page('clubs.php') ?>" href="clubs.php">Clubs</a>
         <a class="<?= active_page('events.php') ?>" href="events.php">Events</a>
+        <a class="<?= active_page('leaderboard.php') ?>" href="leaderboard.php">Leaderboard</a>
         <?php if ($currentUser): ?>
             <a class="<?= active_page('memberships.php') ?>" href="memberships.php">Memberships</a>
-            <?php if ($managedNavigation): ?><a class="<?= active_page('attendance.php') ?>" href="attendance.php">Attendance</a><a class="<?= active_page('announcements.php') ?>" href="announcements.php">Publish</a><?php endif; ?>
+            <?php if ($managedNavigation): ?><a class="<?= active_page('attendance.php') ?>" href="attendance.php">Attendance</a><a class="<?= active_page('announcements.php') ?>" href="announcements.php">Publish</a><a class="<?= active_page('reports.php') ?>" href="reports.php">Reports</a><?php endif; ?>
             <a class="<?= active_page('certificates.php') ?>" href="certificates.php">Certificates</a>
-            <a class="nav-notice <?= active_page('notifications.php') ?>" href="notifications.php">Inbox<?php if($unreadCount):?><b data-unread-count><?=$unreadCount?></b><?php endif;?></a>
+            <?php if (!is_admin()): ?><a class="<?= active_page('feedback.php') ?>" href="feedback.php">Feedback</a><?php endif; ?>
+            <a class="<?= active_page('participation.php') ?>" href="participation.php">History</a>
+            <?php if (!$currentUser || $currentUser['role'] !== 'Admin'): ?><a class="<?= active_page('recommendations.php') ?>" href="recommendations.php">For you</a><?php endif; ?>
+            <a class="nav-notice <?= active_page('notifications.php') ?>" href="notifications.php">Inbox<?php if ($unreadCount):?><b data-unread-count><?=$unreadCount?></b><?php endif;?></a>
             <a class="<?= active_page('dashboard.php') ?>" href="dashboard.php">Dashboard</a>
-            <a class="profile-link" href="dashboard.php"><span><?= e(strtoupper(substr($currentUser['full_name'],0,1))) ?></span><?= e(explode(' ',$currentUser['full_name'])[0]) ?></a>
+            <?php if (is_admin()): ?><a class="<?= active_page('admin.php') ?>" href="admin.php">Admin</a><?php endif; ?>
+            <a class="profile-link" href="profile.php"><span><?= e(strtoupper(substr($currentUser['full_name'], 0, 1))) ?></span><?= e(explode(' ', $currentUser['full_name'])[0]) ?></a>
             <a class="button button-ink" href="logout.php">Sign out</a>
         <?php else: ?>
             <a href="login.php">Sign in</a>

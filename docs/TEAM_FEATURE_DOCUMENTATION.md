@@ -10,7 +10,7 @@ This document is the technical and presentation handoff for the three project me
 
 It is written so that each member can explain one independent feature area, demonstrate it live, answer database and security questions, and describe how their work connects to the other modules. Authentication and the shared application foundation belong to the project as a whole.
 
-> Presentation rule: describe only the items marked **Implemented now** as working application features. Items marked **Schema-ready / next phase** are represented in the normalized database and specification but do not yet have complete user interfaces.
+> Presentation rule: all modules described as implemented in this document have working interfaces. QR, payments, external email/SMS, biometric attendance, and external verification services remain intentionally outside scope.
 
 ---
 
@@ -274,12 +274,12 @@ Every write calls `can_manage_club()` using the target club ID. It verifies an a
 **Why cancel an event instead of deleting it?**  
 Cancellation preserves history and lets registrations or notifications reference the event. Deletion is reserved for mistakes or administrative cleanup.
 
-## 4.8 Schema-ready / next phase
+## 4.8 Completed expansion
 
-- Event poster upload processing (the path column and display are ready)
-- Club logo upload processing
-- Full gallery upload CRUD
-- Rich registration-list export
+- Validated club-logo and event-poster uploads
+- Club gallery upload, caption display, and non-destructive removal
+- Administrator club approval, suspension, and reactivation
+- Searchable registration rosters and CSV export
 
 ---
 
@@ -399,12 +399,12 @@ It preserves audit history, supports a cancellation reason, and allows controlle
 **What happens without JavaScript?**  
 The normal form submits to `events.php`, which executes the same core checks and redirects with a flash message.
 
-## 5.9 Next phase
+## 5.9 Completed expansion
 
-- Registration detail/history export
-- Bulk attendance import
+- Student registration and attendance history
+- Searchable registration roster and CSV export
 - Feedback submission after Present attendance
-- Optional email reminders
+- Deduplicated in-application event reminders
 
 ---
 
@@ -414,7 +414,7 @@ The normal form submits to `events.php`, which executes the same core checks and
 
 **“My feature area turns relational data into useful role-aware information. The same dashboard recognizes students, club executives, and administrators, then displays the statistics, alerts, queues, and actions appropriate to their authority.”**
 
-The implemented independent feature combines the role-aware dashboard with a working notification centre and announcement publishing lifecycle. Advanced feedback CRUD, leaderboard formulas, and full reports remain next-phase modules.
+The implemented independent feature combines role-aware dashboards, profiles and interests, feedback, recommendations, announcements, notifications, leaderboard calculations, and complete reporting interfaces.
 
 ## 6.2 Implemented now
 
@@ -522,19 +522,20 @@ An announcement is published content for an audience. A notification is a recipi
 **How would the leaderboard work without a table?**  
 An aggregate SQL query groups by club and calculates a score from event count, attendance, and average rating. The ranking is a derived report, not permanent data.
 
-## 6.9 Next phase
+## 6.9 Completed expansion
 
-- Feedback and rating submission/moderation
-- Rule-based event recommendations from student interests
-- Active-club leaderboard query and view
-- Complete administrative reports and export
+- Attendance-gated feedback submission, editing, aggregation, and moderation
+- Explainable rule-based recommendations using interests, history, popularity, availability, and timing
+- Active-club leaderboard query and public view
+- Administrative and club-level reports with date/club filters and CSV export
 
-Suggested leaderboard formula from the specification:
+Implemented leaderboard formula:
 
 ```text
-Activity Score = (Number of Events × 5)
-               + Total Attendance
-               + (Average Rating × 10)
+Activity Score = (Number of Events × 10)
+               + (Registrations × 2)
+               + (Attendance × 3)
+               + (Average Rating × 5)
 ```
 
 ---
@@ -568,9 +569,9 @@ This is the project’s strongest integration story: authorization creates manag
 | Certificates | Yes | Yes | Issue/revoke/download/verify | Rifat |
 | Notifications | Yes | Yes | Paginated read/read-all/fan-out | Faisal |
 | Announcements | Yes | Yes | Audience/message publish, edit, remove | Faisal |
-| Feedback | Yes | Not yet | Schema-ready | Faisal |
-| Recommendations | Derived | Limited dashboard context | Next phase | Faisal |
-| Leaderboard/reports | Derived | Dashboard summaries | Partial | Faisal |
+| Feedback | Yes | Yes | Submit/edit/moderate/aggregate | Faisal |
+| Recommendations | Derived | Yes | Explainable rule-based ranking | Faisal |
+| Leaderboard/reports | Derived | Yes | Filters, metrics, CSV export | Faisal |
 
 ---
 
@@ -596,7 +597,7 @@ Fresh seed data uses BRACU-format student addresses, and newly created student a
 2. Diha: club membership authority followed by five-field event creation.
 3. Rifat: register, mark attendance from the event roster, download the certificate, and verify its public code.
 4. Faisal: publish a club notice, show the one-time inbox delivery, then demonstrate read state and role-aware dashboards.
-5. Shared conclusion: security, progressive enhancement, future modules.
+5. Shared conclusion: security, progressive enhancement, completed scope, and intentional exclusions.
 
 ### 9.4 Before presenting
 
@@ -660,6 +661,10 @@ The pages use live database counts, instant search and filters, remembered event
 | `assets/app.js` | Dynamic browser behavior |
 | `assets/style.css` | Responsive editorial design system |
 | `install.bat` | XAMPP discovery, deployment, database setup, and launch |
+| `profile.php` / `forgot-password.php` | Profile, interests, password, and offline recovery |
+| `feedback.php` / `recommendations.php` / `leaderboard.php` | Engagement and discovery features |
+| `admin.php` / `reports.php` | Soft moderation, derived metrics, and CSV export |
+| `gallery.php` / `roster.php` | Club media and searchable event participation |
 
 ---
 
@@ -679,6 +684,6 @@ The pages use live database counts, instant search and filters, remembered event
 
 ### Faisal Mahbub
 
-**Showcase:** announcement publishing, one-time notification fan-out, inbox state, and role-aware dashboards.
-**Best proof:** publish once, inspect recipient delivery/read state, then compare Student, Executive, and Administrator views.
+**Showcase:** profiles, feedback, recommendations, leaderboard, announcement publishing, notification fan-out, dashboards, and reports.
+**Best proof:** submit attended-event feedback, show an explainable recommendation and leaderboard score, publish once, then export a filtered report.
 **Core concept:** audience content becomes recipient-specific engagement without duplicate fan-out.

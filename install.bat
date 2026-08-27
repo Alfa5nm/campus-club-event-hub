@@ -128,6 +128,12 @@ if exist "%DEST_DIR%\" (
     mkdir "%DEST_DIR%" 2>nul
 )
 
+if not exist "%DEST_DIR%\uploads\profiles" mkdir "%DEST_DIR%\uploads\profiles"
+if not exist "%DEST_DIR%\uploads\clubs" mkdir "%DEST_DIR%\uploads\clubs"
+if not exist "%DEST_DIR%\uploads\events" mkdir "%DEST_DIR%\uploads\events"
+if not exist "%DEST_DIR%\uploads\gallery" mkdir "%DEST_DIR%\uploads\gallery"
+if not exist "%DEST_DIR%\uploads\certificates" mkdir "%DEST_DIR%\uploads\certificates"
+
 robocopy "%SOURCE_DIR%" "%DEST_DIR%" /E /R:2 /W:1 /XD ".git" "backups" /XF "*.log" >nul
 set "ROBO_RESULT=!ERRORLEVEL!"
 if !ROBO_RESULT! GEQ 8 (
@@ -199,7 +205,7 @@ if not errorlevel 1 (
         echo [OK] Existing data preserved and upgraded.
         exit /b 0
     )
-    if not exist "%DEST_DIR%\backups" mkdir "%DEST_DIR%\backups"
+if not exist "%DEST_DIR%\backups" mkdir "%DEST_DIR%\backups"
     for /f %%T in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd-HHmmss"') do set "STAMP=%%T"
     "%MYSQLDUMP%" -u root --single-transaction "%DB_NAME%" > "%DEST_DIR%\backups\%DB_NAME%-!STAMP!.sql"
     if errorlevel 1 (

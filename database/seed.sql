@@ -183,6 +183,13 @@ INSERT INTO notification (notification_id,recipient_user_id,notification_type,me
 (32,13,'System Notice','Explore clubs and events from one shared campus platform.','2026-08-18 09:00:00',1),
 (33,3,'Event Cancellation','Monsoon portrait session has been cancelled because of severe weather.','2026-08-19 16:00:00',1);
 
+INSERT INTO notification
+    (notification_id,recipient_user_id,notification_type,message,created_at,is_read,source_type,source_id)
+VALUES
+    (34,2,'Event Reminder','Reminder: Build Night is coming up.','2026-08-24 09:00:00',0,'event_reminder',1),
+    (35,5,'Event Reminder','Reminder: Build Night is coming up.','2026-08-24 09:00:00',1,'event_reminder',1),
+    (36,7,'Event Reminder','Reminder: Build Night is coming up.','2026-08-24 09:00:00',0,'event_reminder',1);
+
 INSERT INTO password_reset_token (reset_id,user_id,token_hash,expires_at,used_at,created_at) VALUES
 (1,11,SHA2('expired-demo-reset',256),'2026-08-01 12:00:00',NULL,'2026-08-01 11:00:00'),
 (2,12,SHA2('used-demo-reset',256),'2026-08-10 12:00:00','2026-08-10 11:20:00','2026-08-10 11:00:00');

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 define('DB_HOST', getenv('CAMPUSHUB_DB_HOST') ?: '127.0.0.1');

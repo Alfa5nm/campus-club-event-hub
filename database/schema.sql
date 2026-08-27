@@ -80,6 +80,7 @@ CREATE TABLE club_gallery (
   club_id BIGINT UNSIGNED NOT NULL,
   photo_path VARCHAR(255) NOT NULL,
   caption VARCHAR(255) NULL,
+  status ENUM('Active','Removed') NOT NULL DEFAULT 'Active',
   uploaded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_gallery_club FOREIGN KEY (club_id) REFERENCES clubs(club_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
@@ -180,8 +181,11 @@ CREATE TABLE notification (
   message VARCHAR(500) NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   is_read BOOLEAN NOT NULL DEFAULT FALSE,
+  source_type VARCHAR(50) NULL,
+  source_id BIGINT UNSIGNED NULL,
   CONSTRAINT fk_notification_user FOREIGN KEY (recipient_user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-  INDEX idx_notification_inbox (recipient_user_id, is_read, created_at)
+  INDEX idx_notification_inbox (recipient_user_id, is_read, created_at),
+  UNIQUE KEY uq_notification_source (recipient_user_id, notification_type, source_type, source_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE password_reset_token (

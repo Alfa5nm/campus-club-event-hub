@@ -124,6 +124,14 @@ document.querySelectorAll('form[data-ajax]').forEach((form) => {
         form.remove();
       } else if (form.dataset.ajax.includes('announcement')) {
         setTimeout(() => { window.location.href = 'announcements.php'; }, 550);
+      } else if (form.dataset.ajax.includes('feedback')) {
+        submitter.textContent = 'Feedback saved';
+      } else if (form.dataset.ajax.includes('moderation')) {
+        const badge = form.closest('tr')?.querySelector('.badge');
+        if (badge) badge.textContent = result.data.status;
+        if (submitter) submitter.textContent = original;
+      } else if (form.dataset.ajax.includes('reminder')) {
+        if (submitter) submitter.textContent = original;
       } else if (form.querySelector('[name="action"]')?.value === 'request_join') {
         submitter.textContent = 'Request pending'; submitter.disabled = true;
         const state = form.closest('.club-card')?.querySelector('[data-membership-state]');
@@ -162,5 +170,18 @@ document.querySelectorAll('img').forEach((image) => {
   image.addEventListener('error', () => {
     image.hidden = true;
     image.parentElement?.classList.add('image-fallback');
+  });
+});
+
+document.querySelectorAll('[data-table-search]').forEach((input) => {
+  const table = input.closest('.page-shell')?.querySelector('[data-search-table]');
+  if (!table) return;
+
+  const rows = [...table.querySelectorAll('tbody tr')];
+  input.addEventListener('input', () => {
+    const query = input.value.trim().toLowerCase();
+    rows.forEach((row) => {
+      row.hidden = query !== '' && !row.textContent.toLowerCase().includes(query);
+    });
   });
 });

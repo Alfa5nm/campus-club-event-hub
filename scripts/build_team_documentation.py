@@ -76,6 +76,9 @@ def set_table_geometry(table, widths_dxa):
         col.set(qn("w:w"), str(width))
         grid.append(col)
     for row in table.rows:
+        tr_pr = row._tr.get_or_add_trPr()
+        if tr_pr.find(qn("w:cantSplit")) is None:
+            tr_pr.append(OxmlElement("w:cantSplit"))
         for index, cell in enumerate(row.cells):
             tc_w = cell._tc.get_or_add_tcPr().find(qn("w:tcW"))
             if tc_w is None:
@@ -321,7 +324,11 @@ def add_contents(doc):
     set_table_geometry(table, [800, 8320])
     set_repeat_table_header(table.rows[0])
     doc.add_paragraph()
-    add_callout(doc, "Only items labeled Implemented now should be presented as complete working features. Schema-ready items are planned extensions.", "PRESENTATION RULE")
+    add_callout(
+        doc,
+        "All modules documented as implemented have working interfaces. QR, payments, external messaging, biometric attendance, and external verification services are intentionally outside scope.",
+        "PRESENTATION RULE",
+    )
     doc.add_page_break()
 
 

@@ -17,5 +17,5 @@ Thumbs.db
 *.log
 *.tmp
 *.cache
-.docx-qa-v*/
+.docx-qa-*/
 ~$*.docx

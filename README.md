@@ -1,6 +1,6 @@
 # Campus Club & Event Hub
 
-XAMPP-ready PHP and MySQL application for campus club, membership, executive-role, and event management.
+Complete XAMPP-ready PHP and MySQL portal for campus clubs, memberships, events, participation, engagement, and administration.
 
 ## Setup
 
@@ -48,7 +48,14 @@ The fresh-install seed includes 13 users, 8 clubs, 20 memberships, 12 events, 25
 - Two-field club/system announcement publishing with generated titles and one-time recipient fan-out
 - Paginated notification centre with unread badges and progressive mark-as-read actions
 - Five-field event creation with automatic category, time, deadline, description, and publication defaults
-- Normalized schema with mock data for later feedback, recommendation, and reporting work
+- Editable student profiles, interests, local image uploads, password changes, and offline reset links
+- Club logos, galleries, event posters, searchable rosters, CSV exports, and deduplicated event reminders
+- Attendance-gated feedback, executive rating summaries, and non-destructive administrator moderation
+- Explainable rule-based event recommendations and a derived active-club leaderboard
+- Administrator and club-level reports for memberships, registrations, attendance, capacity, certificates, announcement reach, and ratings
+- Normalized schema with complete demonstration data across every table and lifecycle state
+
+QR attendance is intentionally excluded. Legacy nullable QR schema fields remain only for safe upgrades.
 
 Placeholder photography is stored locally under `assets/images`. Source and photographer details are documented in `docs/image-credits.md`.
 
