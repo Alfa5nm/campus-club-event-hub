@@ -1,6 +1,9 @@
 # Runtime uploads
 uploads/*
 !uploads/.htaccess
+!uploads/certificates/
+uploads/certificates/*
+!uploads/certificates/.htaccess
 
 # Local configuration and environment files
 .env

@@ -44,11 +44,6 @@
     margin-top: 0.25rem;
 }
 
-/* Historical event relationships are preserved through cancellation. */
-button[name="action"][value="delete"] {
-    display: none;
-}
-
 @media (max-width: 760px) {
     .gallery-grid {
         grid-template-columns: 1fr;

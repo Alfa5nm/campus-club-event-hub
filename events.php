@@ -115,11 +115,156 @@ $pageTitle = 'Events';
 require __DIR__.'/includes/header.php';
 ?>
 <section class="page-shell">
-<div class="page-head"><div><span class="eyebrow">Live campus calendar</span><h2>Don’t just scroll.<br><span class="accent-script">Show up.</span></h2><p>Search, filter, and claim your place without leaving the page.</p></div><?php if ($manageable):?><a class="button button-primary" href="events.php?new=1">＋ Create event</a><?php endif;?></div>
-<div class="filter-bar" data-filter-scope="events"><label class="search-field"><span>⌕</span><input type="search" data-live-search placeholder="Search event, club, or venue…"></label><div class="filter-chips"><button class="filter-chip active" data-filter="all">All</button><?php foreach ($categories as $category):?><button class="filter-chip" data-filter="<?=e(strtolower($category))?>"><?=e($category)?></button><?php endforeach;?></div><span class="result-count"><strong data-result-count><?=count($events)?></strong> events</span><div class="view-toggle" aria-label="Event view"><button class="active" data-view="grid" title="Grid view" aria-label="Grid view">▦</button><button data-view="list" title="List view" aria-label="List view">☷</button></div></div>
-<?php if ((isset($_GET['new']) && $manageable) || $edit):?><form class="card editor-card" method="post"><input type="hidden" name="csrf" value="<?=e(csrf_token())?>"><input type="hidden" name="action" value="save"><input type="hidden" name="event_id" value="<?=e((string)($edit['event_id'] ?? ''))?>"><h3><?=$edit ? 'Edit event' : 'Create an event'?></h3><p class="muted">Only the essentials. New events publish immediately with sensible defaults.</p><?php if ($error):?><div class="alert alert-error"><?=e($error)?></div><?php endif;?><div class="field-grid"><div class="field"><label>Club</label><select name="club_id" required><?php foreach ($manageable as $c):?><option value="<?=$c['club_id']?>" <?=(int)($edit['club_id'] ?? 0) === (int)$c['club_id'] ? 'selected' : ''?>><?=e($c['club_name'])?></option><?php endforeach;?></select></div><div class="field"><label>Event title</label><input name="title" required maxlength="180" value="<?=e($edit['title'] ?? '')?>"></div><div class="field"><label>Event date</label><input name="event_date" type="date" required value="<?=e($edit['event_date'] ?? '')?>"></div><div class="field"><label>Venue</label><input name="venue" required maxlength="180" value="<?=e($edit['venue'] ?? '')?>"></div><div class="field"><label>Maximum participants</label><input name="maximum_participants" type="number" min="1" required value="<?=e((string)($edit['maximum_participants'] ?? 50))?>"></div></div><button class="button button-primary"><?=$edit ? 'Save changes' : 'Create & publish'?></button> <a class="button button-quiet" href="events.php">Cancel</a></form><?php endif;?>
-<div class="grid dynamic-grid" data-filter-grid data-event-view><?php foreach ($events as $i => $event):$percent = min(100, round(((int)$event['registration_count'] / (int)$event['maximum_participants']) * 100));
-    $reg = $registered[(int)$event['event_id']] ?? null;?><article class="card event-card reveal" data-filter-item data-category="<?=e(strtolower($event['event_category']))?>" data-search="<?=e(strtolower($event['title'].' '.$event['club_name'].' '.$event['venue'].' '.$event['event_category']))?>"><div class="event-cover"><img src="<?=e($eventImages[$i % count($eventImages)])?>" alt=""><span class="cover-index">0<?=$i + 1?></span></div><div class="card-content"><div class="event-card-head"><div class="event-date-block"><strong><?=e(date('d', strtotime($event['event_date'])))?></strong><span><?=e(strtoupper(date('M', strtotime($event['event_date']))))?></span></div><span class="badge <?=$event['status'] === 'Cancelled' ? 'badge-danger' : ''?>"><?=e($event['status'])?></span></div><span class="card-tag"><?=e($event['event_category'])?></span><h3><?=e($event['title'])?></h3><p class="muted clamp"><?=e($event['description'])?></p><div class="detail-list"><span>⌁ <?=e($event['venue'])?></span><span>◷ <?=e(substr((string)$event['start_time'], 0, 5))?> · <?=e($event['club_name'])?></span></div><div class="capacity"><span style="width:<?=$percent?>%"></span></div><small class="muted"><span data-registration-count><?=(int)$event['registration_count']?></span> / <?=(int)$event['maximum_participants']?> places claimed</small><div class="card-footer"><?php if (user() && !is_admin() && !can_manage_club((int)$event['club_id'])):?><form method="post" data-ajax="api/event-registration.php"><input type="hidden" name="csrf" value="<?=e(csrf_token())?>"><input type="hidden" name="event_id" value="<?=$event['event_id']?>"><?php if ($reg === 'Registered'):?><button class="button button-quiet" name="action" value="cancel_registration" data-confirm="Cancel your registration?">Registered ✓ · Cancel</button><?php elseif ($event['status'] === 'Upcoming'):?><button class="button button-primary" name="action" value="register">Claim my place</button><?php endif;?></form><?php elseif (!user()):?><a class="button button-primary" href="login.php">Sign in to register</a><?php endif;?><?php if (user() && can_manage_club((int)$event['club_id'])):?><div class="actions"><a class="button button-quiet" href="events.php?edit=<?=$event['event_id']?>">Edit</a><form method="post"><input type="hidden" name="csrf" value="<?=e(csrf_token())?>"><input type="hidden" name="event_id" value="<?=$event['event_id']?>"><?php if ($event['status'] !== 'Cancelled'):?><button class="button button-danger" name="action" value="cancel" data-confirm="Cancel this event?">Cancel</button><?php endif;?><button class="button button-danger" name="action" value="delete" data-confirm="Permanently delete this event?">Delete</button></form></div><?php endif;?></div></div></article><?php endforeach;?></div><div class="empty filter-empty" hidden>No events match those filters. Try another category or search.</div>
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">Live campus calendar</span>
+            <h2>Don’t just scroll.<br><span class="accent-script">Show up.</span></h2>
+            <p>Search, filter, and claim your place without leaving the page.</p>
+        </div>
+        <?php if ($manageable): ?>
+            <a class="button button-primary" href="events.php?new=1">＋ Create event</a>
+        <?php endif; ?>
+    </div>
+
+    <div class="filter-bar" data-filter-scope="events">
+        <label class="search-field">
+            <span>⌕</span>
+            <input type="search" data-live-search placeholder="Search event, club, or venue…">
+        </label>
+        <div class="filter-chips">
+            <button class="filter-chip active" data-filter="all">All</button>
+            <?php foreach ($categories as $category): ?>
+                <button class="filter-chip" data-filter="<?= e(strtolower($category)) ?>">
+                    <?= e($category) ?>
+                </button>
+            <?php endforeach; ?>
+        </div>
+        <span class="result-count"><strong data-result-count><?= count($events) ?></strong> events</span>
+        <div class="view-toggle" aria-label="Event view">
+            <button class="active" data-view="grid" title="Grid view" aria-label="Grid view">▦</button>
+            <button data-view="list" title="List view" aria-label="List view">☷</button>
+        </div>
+    </div>
+
+    <?php if ((isset($_GET['new']) && $manageable) || $edit): ?>
+        <form class="card editor-card" method="post">
+            <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+            <input type="hidden" name="action" value="save">
+            <input type="hidden" name="event_id" value="<?= e((string) ($edit['event_id'] ?? '')) ?>">
+            <h3><?= $edit ? 'Edit event' : 'Create an event' ?></h3>
+            <p class="muted">Only the essentials. New events publish immediately with sensible defaults.</p>
+            <?php if ($error): ?>
+                <div class="alert alert-error"><?= e($error) ?></div>
+            <?php endif; ?>
+            <div class="field-grid">
+                <div class="field">
+                    <label>Club</label>
+                    <select name="club_id" required>
+                        <?php foreach ($manageable as $club): ?>
+                            <option value="<?= $club['club_id'] ?>" <?= (int) ($edit['club_id'] ?? 0) === (int) $club['club_id'] ? 'selected' : '' ?>>
+                                <?= e($club['club_name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Event title</label>
+                    <input name="title" required maxlength="180" value="<?= e($edit['title'] ?? '') ?>">
+                </div>
+                <div class="field">
+                    <label>Event date</label>
+                    <input name="event_date" type="date" required value="<?= e($edit['event_date'] ?? '') ?>">
+                </div>
+                <div class="field">
+                    <label>Venue</label>
+                    <input name="venue" required maxlength="180" value="<?= e($edit['venue'] ?? '') ?>">
+                </div>
+                <div class="field">
+                    <label>Maximum participants</label>
+                    <input name="maximum_participants" type="number" min="1" required value="<?= e((string) ($edit['maximum_participants'] ?? 50)) ?>">
+                </div>
+            </div>
+            <button class="button button-primary"><?= $edit ? 'Save changes' : 'Create & publish' ?></button>
+            <a class="button button-quiet" href="events.php">Cancel</a>
+        </form>
+    <?php endif; ?>
+
+    <div class="grid dynamic-grid" data-filter-grid data-event-view>
+        <?php foreach ($events as $index => $event): ?>
+            <?php
+            $percent = min(
+                100,
+                round(((int) $event['registration_count'] / (int) $event['maximum_participants']) * 100)
+            );
+            $registrationStatus = $registered[(int) $event['event_id']] ?? null;
+            ?>
+            <article
+                class="card event-card reveal"
+                data-filter-item
+                data-category="<?= e(strtolower($event['event_category'])) ?>"
+                data-search="<?= e(strtolower($event['title'] . ' ' . $event['club_name'] . ' ' . $event['venue'] . ' ' . $event['event_category'])) ?>"
+            >
+                <div class="event-cover">
+                    <img src="<?= e($eventImages[$index % count($eventImages)]) ?>" alt="">
+                    <span class="cover-index"><?= str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT) ?></span>
+                </div>
+                <div class="card-content">
+                    <div class="event-card-head">
+                        <div class="event-date-block">
+                            <strong><?= e(date('d', strtotime($event['event_date']))) ?></strong>
+                            <span><?= e(strtoupper(date('M', strtotime($event['event_date'])))) ?></span>
+                        </div>
+                        <span class="badge <?= $event['status'] === 'Cancelled' ? 'badge-danger' : '' ?>">
+                            <?= e($event['status']) ?>
+                        </span>
+                    </div>
+                    <span class="card-tag"><?= e($event['event_category']) ?></span>
+                    <h3><?= e($event['title']) ?></h3>
+                    <p class="muted clamp"><?= e($event['description']) ?></p>
+                    <div class="detail-list">
+                        <span>⌁ <?= e($event['venue']) ?></span>
+                        <span>◷ <?= e(substr((string) $event['start_time'], 0, 5)) ?> · <?= e($event['club_name']) ?></span>
+                    </div>
+                    <div class="capacity"><span style="width: <?= $percent ?>%"></span></div>
+                    <small class="muted">
+                        <span data-registration-count><?= (int) $event['registration_count'] ?></span>
+                        / <?= (int) $event['maximum_participants'] ?> places claimed
+                    </small>
+                    <div class="card-footer">
+                        <?php if (user() && !is_admin() && !can_manage_club((int) $event['club_id'])): ?>
+                            <form method="post" data-ajax="api/event-registration.php">
+                                <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+                                <input type="hidden" name="event_id" value="<?= $event['event_id'] ?>">
+                                <?php if ($registrationStatus === 'Registered'): ?>
+                                    <button class="button button-quiet" name="action" value="cancel_registration" data-confirm="Cancel your registration?">
+                                        Registered ✓ · Cancel
+                                    </button>
+                                <?php elseif ($event['status'] === 'Upcoming'): ?>
+                                    <button class="button button-primary" name="action" value="register">Claim my place</button>
+                                <?php endif; ?>
+                            </form>
+                        <?php elseif (!user()): ?>
+                            <a class="button button-primary" href="login.php">Sign in to register</a>
+                        <?php endif; ?>
+
+                        <?php if (user() && can_manage_club((int) $event['club_id'])): ?>
+                            <div class="actions">
+                                <a class="button button-quiet" href="events.php?edit=<?= $event['event_id'] ?>">Edit</a>
+                                <?php if ($event['status'] !== 'Cancelled'): ?>
+                                    <form method="post">
+                                        <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+                                        <input type="hidden" name="event_id" value="<?= $event['event_id'] ?>">
+                                        <button class="button button-danger" name="action" value="cancel" data-confirm="Cancel this event?">Cancel</button>
+                                    </form>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </article>
+        <?php endforeach; ?>
+    </div>
+    <div class="empty filter-empty" hidden>No events match those filters. Try another category or search.</div>
 <?php if ($manageable): ?>
     <section class="management-rail">
         <div class="section-head"><div><span class="eyebrow">MANAGEMENT TOOLS</span><h3>Rosters and event media</h3></div></div>
@@ -136,4 +281,4 @@ require __DIR__.'/includes/header.php';
     </section>
 <?php endif; ?>
 </section>
-<?php require __DIR__.'/includes/footer.php';?>
+<?php require __DIR__ . '/includes/footer.php'; ?>

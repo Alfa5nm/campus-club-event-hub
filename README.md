@@ -10,18 +10,18 @@ Double-click `install.bat`. It will:
 
 1. Find XAMPP on common Windows drives.
 2. Confirm that PHP, MySQL/MariaDB, Apache, and phpMyAdmin are available.
-3. Copy the project into XAMPP's `htdocs` directory.
+3. Copy the project into Apache's configured `DocumentRoot` directory.
 4. Start Apache and MySQL.
 5. Create and seed the database.
 6. Open the application and phpMyAdmin.
 
-If a database already exists, the installer can preserve it and apply the idempotent core-expansion migration, or create a timestamped SQL backup before resetting it. Existing runtime uploads are preserved during application updates.
+The installer detects the active XAMPP installation and reads Apache's configured `DocumentRoot`, so it also works when the web root is not the default `xampp\htdocs` path. If a database already exists, it can preserve it and apply the idempotent core-expansion migration, or create a timestamped SQL backup before resetting it. Existing runtime uploads are preserved during application updates.
 
 ### Manual setup
 
 1. Start Apache and MySQL from the XAMPP Control Panel.
 2. Open phpMyAdmin and import `database/schema.sql`, followed by `database/seed.sql`.
-3. Copy or link this folder into your active XAMPP installation as `htdocs\campus-club-hub`.
+3. Copy or link this folder into the `DocumentRoot` configured in Apache's `httpd.conf` as `campus-club-hub`.
 4. Visit `http://localhost/campus-club-hub/`.
 
 The default connection is MySQL user `root` with an empty password. Change `config/database.php` if your XAMPP configuration differs.

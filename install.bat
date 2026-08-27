@@ -7,6 +7,7 @@ set "APP_NAME=campus-club-hub"
 set "DB_NAME=campus_club_hub"
 set "SOURCE_DIR=%~dp0"
 set "XAMPP_DIR="
+set "HTDOCS_DIR="
 set "MYSQL_PASSWORD="
 
 echo.
@@ -33,7 +34,11 @@ if not exist "%XAMPP_DIR%\phpMyAdmin\index.php" (
     goto :failed
 )
 
-set "DEST_DIR=%XAMPP_DIR%\htdocs\%APP_NAME%"
+call :find_htdocs
+if not defined HTDOCS_DIR set "HTDOCS_DIR=%XAMPP_DIR%\htdocs"
+
+echo [OK] Apache DocumentRoot found at: %HTDOCS_DIR%
+set "DEST_DIR=%HTDOCS_DIR%\%APP_NAME%"
 call :install_files
 if errorlevel 1 goto :failed
 
@@ -90,6 +95,13 @@ for /f "delims=" %%I in ('where xampp-control.exe 2^>nul') do (
     if not defined XAMPP_DIR set "XAMPP_DIR=%%~dpI"
 )
 if defined XAMPP_DIR if "!XAMPP_DIR:~-1!"=="\" set "XAMPP_DIR=!XAMPP_DIR:~0,-1!"
+exit /b 0
+
+:find_htdocs
+rem Respect Apache's configured DocumentRoot instead of assuming xampp\htdocs.
+for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "$m=Select-String -LiteralPath '%XAMPP_DIR%\apache\conf\httpd.conf' -Pattern '^\s*DocumentRoot\s+\"?([^\"#]+)' ^| Select-Object -First 1; if($m){$p=$m.Matches[0].Groups[1].Value.Trim(); if(Test-Path -LiteralPath $p){(Resolve-Path -LiteralPath $p).Path}}" 2^>nul`) do (
+    if not defined HTDOCS_DIR set "HTDOCS_DIR=%%I"
+)
 exit /b 0
 
 :xampp_missing
