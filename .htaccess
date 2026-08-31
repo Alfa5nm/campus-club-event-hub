@@ -1,5 +1,32 @@
 Options -Indexes
 
+DirectoryIndex mixed/index.php
+
+RewriteEngine On
+RewriteCond %{REQUEST_URI} ^(.*/)index\.php$
+RewriteRule ^index\.php$ %1 [R=302,L,NE]
+
+RewriteCond %{REQUEST_URI} ^(.*/)(clubs|gallery|event-media|memberships|events)\.php$
+RewriteRule ^(clubs|gallery|event-media|memberships|events)\.php$ %1diha/$1.php [R=302,L,NE]
+
+RewriteCond %{REQUEST_URI} ^(.*/)(profile|feedback|announcements|notifications|dashboard|reports|recommendations|leaderboard)\.php$
+RewriteRule ^(profile|feedback|announcements|notifications|dashboard|reports|recommendations|leaderboard)\.php$ %1faisal/$1.php [R=302,L,NE]
+
+RewriteCond %{REQUEST_URI} ^(.*/)(participation|roster|attendance|certificates|certificate-download|verify-certificate)\.php$
+RewriteRule ^(participation|roster|attendance|certificates|certificate-download|verify-certificate)\.php$ %1rifat/$1.php [R=302,L,NE]
+
+RewriteCond %{REQUEST_URI} ^(.*/)(login|signup|logout|forgot-password|reset-password|admin)\.php$
+RewriteRule ^(login|signup|logout|forgot-password|reset-password|admin)\.php$ %1mixed/$1.php [R=302,L,NE]
+
+RewriteCond %{REQUEST_URI} ^(.*/)api/membership\.php$
+RewriteRule ^api/membership\.php$ %1diha/api/membership.php [R=307,L,NE]
+
+RewriteCond %{REQUEST_URI} ^(.*/)api/(announcement|feedback|notification)\.php$
+RewriteRule ^api/(announcement|feedback|notification)\.php$ %1faisal/api/$1.php [R=307,L,NE]
+
+RewriteCond %{REQUEST_URI} ^(.*/)api/(event-registration|attendance|reminder)\.php$
+RewriteRule ^api/(event-registration|attendance|reminder)\.php$ %1rifat/api/$1.php [R=307,L,NE]
+
 <FilesMatch "\.(sql|drawio|md)$">
     Require all denied
 </FilesMatch>
